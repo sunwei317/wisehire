@@ -177,7 +177,11 @@ def update_task(task):
 
 def delete_task_from_db(task_id, user_id):
     
-            # 如果环境变量不存在，使用默认连接参数
+        to_be_deleted=os.path.join("analysis_reports",f"task_id_{task_id}_user_{user_id}.json")
+        if os.path.exists(to_be_deleted):
+            os.remove(to_be_deleted)
+        
+        # 如果环境变量不存在，使用默认连接参数
         conn = psycopg2.connect(
                 host='localhost',
                 database='resume_analysis',

@@ -14,15 +14,13 @@ import json
 import requests
 
 # Your previous functions here...
-from resume_analyzer_core import (
+from worker import (
     extract_text_from_pdf,
     extract_text_from_docx,
     extract_text_from_txt,
-    extract_working_history_chatgpt,
-    extract_working_history_deepseek,
-    analyze_working_history,
-    match_score,
 )
+
+from worker import submit_pipeline
 
 app = FastAPI(title="WiseHire Technology")
 
@@ -120,7 +118,7 @@ async def get_user_tasks(username: str, db: Session = Depends(get_db)):
             "job_description": task.job_description[:50] + "..." if len(task.job_description) > 50 else task.job_description,
             "submitted_at": task.submitted_at.strftime('%Y-%m-%d %H:%M'),
             "status": task.status,
-            "result_json": task.result_json[:100],
+            "result_json": task.result_json[:100] if task.result_json else "",
             "updated_at": task.updated_at.strftime('%Y-%m-%d %H:%M') if task.updated_at else None
         })
     
@@ -205,8 +203,8 @@ async def analyze_resume(
     
     # 验证职位描述
     job_description = job_description.strip()
-    if len(job_description) < 10:
-        raise HTTPException(status_code=400, detail="Job description must be at least 10 characters long")
+    if len(job_description.split()) < 10:
+        raise HTTPException(status_code=400, detail="Job description must be at least 10 words long")
     
     # 创建任务记录
     task_data = {
@@ -244,64 +242,12 @@ async def analyze_resume(
         else:  # txt
             resume_text = extract_text_from_txt(file_path)
 
-        # 获取工作历史
-        work_histories = extract_working_history_deepseek(resume_text)
+        submit_pipeline.delay(task_id,user_id,resume_text,job_description)
 
-        if isinstance(work_histories, str):
-            work_histories = json.loads(work_histories)
-
-        work_histories = work_histories.get("work_history", [])
-
-        all_work_history_summary = []
-
-        # 对每个雇主进行详细分析
-        for work_history in work_histories:
-            summary = analyze_working_history(work_history)
-            all_work_history_summary.append(summary.replace('\"','"'))
-
-        # 匹配评分
-        match_score_result = match_score(
-            resume_text, json.dumps(all_work_history_summary), job_description
+        return JSONResponse(
+            status_code=200,
+            content={"message": "Task submitted successfully"}
         )
-
-        if isinstance(match_score_result, str):
-            try:
-                match_score_result = json.loads(match_score_result)
-            except json.JSONDecodeError as e:
-                print("Failed to parse:", e)
-                raise HTTPException(status_code=500, detail="Error parsing analysis result")
-
-        # 构建分析结果
-        analysis_result = {
-            "full_name": match_score_result.get("name", "unknown"),
-            "match_score": str(match_score_result["overall_score"]),
-            "analysis_report": match_score_result["detailed_analysis"],
-            "score_breakdown": match_score_result["score_breakdown"],
-            "strengths": match_score_result["strengths"],
-            "gaps": match_score_result["gaps"],
-            "recommendations": match_score_result["recommendation"] + match_score_result["recommendation_explanation"],
-            "interview_questions": match_score_result["interview_questions"],
-            "interview_focus": match_score_result["interview_focus"],
-            "detailed_work_histories": all_work_history_summary,
-        }
-
-        # 保存分析结果
-        result_file_path = os.path.join("analysis_reports", f"task_id_{task_id}_user_{user_id}.json")
-        with open(result_file_path, "w", encoding='utf-8') as _json:
-            json.dump(analysis_result, _json, ensure_ascii=False, indent=4)
-
-        # 更新任务状态
-        update_data = {
-            "task_id": task_id,
-            "status": "completed",
-            "result_json": result_file_path,
-            "updated_at": datetime.now()
-        }
-        update_task(update_data)
-        
-        print("Analysis completed successfully!")
-        return RedirectResponse(f"/dashboard?username={username}", status_code=303)
-
     except Exception as e:
         # 如果分析过程中出现错误，更新任务状态为失败
         update_data = {
@@ -329,7 +275,24 @@ async def delete_task(
         raise HTTPException(status_code=404, detail="User not found")
     
     user_id = user.id
-    delete_task_from_db(task_id, user_id)
+
+    # 调用删除函数
+    try:
+        success = delete_task_from_db(task_id, user_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Task not found or already deleted")
+        
+        return {
+            "success": True,
+            "message": "Task deleted successfully",
+            "deleted_task_id": task_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting task: {str(e)}")
         
 if __name__ == "__main__":
     import uvicorn

@@ -1,8 +1,11 @@
 fastapi
-fitz 
 openai
 fpdf
 uvicorn
 python-multipart
 jinja2
 python-docx
+mistune
+redis
+Celery
+pymupdf

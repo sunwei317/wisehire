@@ -43,27 +43,13 @@
             gap: 12px;
         }
         
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #40e0d0 0%, #1e90ff 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #0c0e2b;
+        .logo-image {
+            height: 35px;
+            width: auto;
+            max-width: 150px;
+            object-fit: contain;
         }
-        
-        .logo-text {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, #40e0d0, #1e90ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-        }
-        
+
         nav ul {
             display: flex;
             list-style: none;
@@ -96,6 +82,33 @@
         
         .logout-button:hover {
             background: rgba(64, 224, 208, 0.1);
+        }
+        
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        nav a:hover {
+            color: #40e0d0;
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            transition: width 0.3s;
+        }
+        
+        nav a:hover::after {
+            width: 100%;
         }
         
         /* Main content area */
@@ -233,6 +246,13 @@
             box-shadow: 0 5px 15px rgba(64, 224, 208, 0.4);
         }
         
+        .analyze-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
         .back-button {
             background: transparent;
             border: 1px solid #40e0d0;
@@ -278,6 +298,65 @@
             display: block;
         }
         
+        /* 成功模态框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(18, 22, 51, 0.95);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #4CAF50;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #40e0d0;
+        }
+        
+        .modal-message {
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .modal-button {
+            background: linear-gradient(135deg, #40e0d0 0%, #1e90ff 100%);
+            border: none;
+            color: #0c0e2b;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.3s;
+        }
+        
+        .modal-button:hover {
+            transform: translateY(-2px);
+        }
+        
         .loading-overlay {
             display: none;
             position: fixed;
@@ -302,38 +381,6 @@
             margin-bottom: 1.5rem;
         }
         
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-        
-        nav a {
-            color: #b0b0b0;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: color 0.3s;
-            position: relative;
-        }
-        
-        nav a:hover {
-            color: #40e0d0;
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 0;
-            background: linear-gradient(90deg, #40e0d0, #1e90ff);
-            transition: width 0.3s;
-        }
-        
-        nav a:hover::after {
-            width: 100%;
-        }
         .loading-text {
             font-size: 1.2rem;
             color: #e0e0e0;
@@ -364,37 +411,101 @@
             font-size: 0.85rem;
         }
 
-        .logo-image {
-    height: 35px; /* 缩小高度 */
-    width: auto;
-    max-width: 150px; /* 限制最大宽度 */
-    object-fit: contain;
-}
+        /* 移动端样式 */
+        @media (max-width: 768px) {
+            .logo-image {
+                height: 28px;
+                max-width: 100px;
+            }
+            
+            .modal-content {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .modal-icon {
+                font-size: 3rem;
+            }
+        }
 
-/* 或者更小的尺寸 */
-.logo-image.small {
-    height: 30px;
-    max-width: 120px;
-}
 
-/* 移动端更小 */
-@media (max-width: 768px) {
-    .logo-image {
-        height: 28px;
-        max-width: 100px;
-    }
-}
+/* 成功模态框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(18, 22, 51, 0.95);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #4CAF50;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #40e0d0;
+        }
+        
+        .modal-message {
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .modal-button {
+            background: linear-gradient(135deg, #40e0d0 0%, #1e90ff 100%);
+            border: none;
+            color: #0c0e2b;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.3s;
+        }
+        
+        .modal-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 添加按钮禁用样式 */
+        .analyze-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
     </style>
 </head>
 <body>
     <header>
         <div class="header-content">
             <div class="logo">
-            <img src="/static/images/logo.png" alt="HireWise" class="logo-image">
-        </div>
+                <img src="/static/images/logo.png" alt="HireWise" class="logo-image">
+            </div>
 
-
-        <nav>
+            <nav>
                 <ul>
                     <li><a href="/">Home</a></li>
                     <li><a href="#">Blog</a></li>
@@ -406,7 +517,6 @@
                     </div>
                 </ul>
             </nav>
-            
         </div>
     </header>
     
@@ -420,7 +530,8 @@
             <!-- 错误消息显示区域 -->
             <div id="errorMessage" class="error-message"></div>
             
-            <form id="uploadForm" action="/analyze" method="post" enctype="multipart/form-data">
+            <!-- 移除action属性，使用JavaScript处理提交 -->
+            <form id="uploadForm" method="post" enctype="multipart/form-data">
                 <!-- 隐藏字段传递username -->
                 <input type="hidden" name="username" value="{{ username }}">
                 
@@ -442,24 +553,35 @@
                     <div id="jobDescriptionError" class="field-error"></div>
                 </div>
                 
-                <button type="submit" class="analyze-button">Submit Task</button>
+                <button type="submit" class="analyze-button" id="submitButton">Submit Task</button>
             </form>
             
             <a href="/dashboard?username={{ username }}" class="back-button">Back to Dashboard</a>
         </div>
     </main>
     
+    <!-- 成功提交模态框 -->
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <h3 class="modal-title">Task Submitted Successfully!</h3>
+            <p class="modal-message">Your task has been submitted for analysis. Please go back to your dashboard to check the status.</p>
+            <button class="modal-button" id="confirmSuccess">OK, Go to Dashboard</button>
+        </div>
+    </div>
+    
+    <!-- 加载覆盖层 -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">
-            <p id="loadingMessage">🔍 Analyzing your resume...</p>
+            <p id="loadingMessage">🔍 Submitting your task...</p>
         </div>
     </div>
     
     <footer>
         <div class="footer-content">
             <div class="copyright">
-                &copy; 2023 WiseHire Technology. All rights reserved.
+                &copy; 2025 WiseHire Technology. All rights reserved.
             </div>
         </div>
     </footer>
@@ -475,6 +597,9 @@
         const uploadForm = document.getElementById('uploadForm');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const errorMessage = document.getElementById('errorMessage');
+        const submitButton = document.getElementById('submitButton');
+        const successModal = document.getElementById('successModal');
+        const confirmSuccess = document.getElementById('confirmSuccess');
         
         // Click on area to trigger file input
         fileUploadArea.addEventListener('click', () => {
@@ -516,9 +641,9 @@
             }
         });
         
-        // Form submission with validation
-        uploadForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Form submission with validation - 修改这部分
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止默认表单提交
             clearErrors();
             
             let hasErrors = false;
@@ -547,13 +672,76 @@
                 return;
             }
             
+            // Disable submit button to prevent multiple submissions
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            
             // Show loading overlay
             const loadingMessage = document.getElementById('loadingMessage');
-            loadingMessage.textContent = '🔍 Analyzing your resume...';
+            loadingMessage.textContent = '🔍 Submitting your task...';
             loadingOverlay.style.display = 'flex';
             
-            // Submit the form
-            this.submit();
+            try {
+                // Create FormData object
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('job_description', jobDescValue);
+                formData.append('username', '{{ username }}');
+                
+                console.log('Sending request to /analyze...');
+                
+                // Send POST request using fetch
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (response.ok) {
+                    // Success - show success modal
+                    console.log('Task submitted successfully, showing modal');
+                    loadingOverlay.style.display = 'none';
+                    successModal.style.display = 'flex';
+                } else {
+                    // Handle error response
+                    let errorDetail = 'Submission failed';
+                    try {
+                        const errorData = await response.json();
+                        errorDetail = errorData.detail || errorDetail;
+                    } catch (parseError) {
+                        errorDetail = await response.text();
+                    }
+                    throw new Error(errorDetail);
+                }
+                
+            } catch (error) {
+                console.error('Submission error:', error);
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+                
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Task';
+                
+                // Show error message
+                showMainError('Submission failed: ' + error.message);
+            }
+        });
+        
+        // Success confirmation button event
+        confirmSuccess.addEventListener('click', function() {
+            console.log('Redirecting to dashboard...');
+            // Redirect to dashboard page
+            window.location.href = `/dashboard?username={{ username }}`;
+        });
+        
+        // 点击模态框外部关闭（可选）
+        successModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.location.href = `/dashboard?username={{ username }}`;
+            }
         });
         
         // Error handling functions
