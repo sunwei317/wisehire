@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result | WiseHire Technology</title>
+    <!-- 添加html2pdf库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0e2b 0%, #1a1f4b 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        /* Header styles */
+        header {
+            background: rgba(10, 14, 39, 0.8);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            background: #d9534f;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            margin-right: 10px;
+            border: none;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #c9302c;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #40e0d0 0%, #1e90ff 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0c0e2b;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .username {
+            color: #40e0d0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .logout-button {
+            background: transparent;
+            border: 1px solid #40e0d0;
+            color: #40e0d0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        
+        .logout-button:hover {
+            background: rgba(64, 224, 208, 0.1);
+        }
+        
+        /* Main content area */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+        }
+        
+        .back-button {
+            background: transparent;
+            border: 1px solid #40e0d0;
+            color: #40e0d0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: rgba(64, 224, 208, 0.1);
+        }
+        
+        .task-info {
+            background: rgba(18, 22, 51, 0.7);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(64, 224, 208, 0.2);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .info-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+        
+        .info-value {
+            font-weight: 500;
+            color: #40e0d0;
+        }
+        
+        .result-content {
+            background: rgba(18, 22, 51, 0.7);
+            border-radius: 8px;
+            padding: 2rem;
+            border: 1px solid rgba(64, 224, 208, 0.2);
+        }
+        
+        .result-section {
+            margin-bottom: 2rem;
+        }
+        
+        .result-section:last-child {
+            margin-bottom: 0;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        nav a:hover {
+            color: #40e0d0;
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            transition: width 0.3s;
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #40e0d0;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        
+        .match-score {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1rem 0;
+            background: linear-gradient(135deg, #40e0d0, #1e90ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .skills-list, .recommendations-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .skills-list li, .recommendations-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .skills-list li:last-child, .recommendations-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .logo-image {
+    height: 35px; /* 缩小高度 */
+    width: auto;
+    max-width: 150px; /* 限制最大宽度 */
+    object-fit: contain;
+}
+
+/* 或者更小的尺寸 */
+.logo-image.small {
+    height: 30px;
+    max-width: 120px;
+}
+
+/* 移动端更小 */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 28px;
+        max-width: 100px;
+    }
+}
+        /* PDF打印样式 */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .result-content, .task-info {
+                background: white !important;
+                border: 1px solid #ddd !important;
+                color: black !important;
+            }
+            
+            .section-title {
+                color: #0066cc !important;
+            }
+            
+            .info-value {
+                color: #0066cc !important;
+            }
+            
+            .download-btn, .back-button, .logout-button {
+                display: none !important;
+            }
+        }
+        
+        /* Footer styles */
+        footer {
+            background: rgba(10, 14, 39, 0.9);
+            padding: 1.5rem 2rem;
+            border-top: 1px solid rgba(64, 224, 208, 0.2);
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .copyright {
+            color: #808080;
+            font-size: 0.85rem;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+            <img src="/static/images/logo.png" alt="HireWise" class="logo-image">
+        </div>
+
+
+        <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <div class="user-info">
+                        <span class="username">Welcome, {{ username }}!</span>
+                        <a href="/" class="logout-button">Logout</a>
+                    </div>
+                </ul>
+            </nav>
+            
+        </div>
+    </header>
+    
+    <main>
+        <div class="result-header">
+            <h1>Analysis Result</h1>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="downloadPdf" class="download-btn">Download as PDF</button>
+                <a href="/dashboard?username={{ username }}" class="back-button">← Back to Dashboard</a>
+            </div>
+        </div>
+        
+        <!-- 报告内容区域 -->
+        <div id="reportContent">
+            <div class="task-info">
+                <div class="info-grid">
+                    <!-- <div class="info-item">
+                        <span class="info-label">Task ID</span>
+                        <span class="info-value">#{{ task.id }}</span>
+                    </div> -->
+                    <div class="info-item">
+                        <span class="info-label">Candidate</span>
+                        <span class="info-value">{{ result_data.full_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Resume File</span>
+                        <span class="info-value">{{ task.resume_filename }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Submitted At</span>
+                        <span class="info-value">{{ task.submitted_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Completed At</span>
+                        <span class="info-value">{{ task.updated_at.strftime('%Y-%m-%d %H:%M') if task.updated_at else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-content">
+                <!-- Match Score -->
+                <div class="result-section">
+                    <h2 class="section-title">Overall Match Score: {{ result_data.match_score }}%</h2>
+                </div>
+
+                <!-- Analysis Summary -->
+                <div class="result-section">
+                    <h2 class="section-title">📊 Analysis Summary</h2>
+                    <p>{{ result_data.analysis_report }}</p>
+                </div>
+
+                <!-- Score Breakdown -->
+                <div class="result-section">
+                    <h2 class="section-title">📈 Score Breakdown</h2>
+                    <ul class="breakdowns-list">                
+                        {% for key, value in result_data.score_breakdown.items() %}
+                            <li><strong>{{ key.replace('_', ' ').title() }}:</strong> {{ value.score }} / {{ value.max_score }} - {{ value.explanation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Strengths -->
+                <div class="result-section">
+                    <h2 class="section-title">🛠️ Strengths</h2>
+                    <ul class="strengths-list">
+                        {% for strength in result_data.strengths %}
+                            <li>{{ strength }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Gaps -->
+                <div class="result-section">
+                    <h2 class="section-title">🛠️ Gaps</h2>
+                    <ul class="gaps-list">
+                        {% for gap in result_data.gaps %}
+                            <li>{{ gap }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Interview Questions -->
+                <div class="result-section">
+                    <h2 class="section-title">🛠️ Interview Questions</h2>
+                    <ul class="questions-list">
+                        {% for question in result_data.interview_questions %}
+                            <li>{{ question }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Interview Focus -->
+                <div class="result-section">
+                    <h2 class="section-title">🛠️ Interview Focus</h2>
+                    <ul class="focus-list">
+                        <li>{{ result_data.interview_focus }}</li>
+                    </ul>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="result-section">
+                    <h2 class="section-title">💡 Recommendations</h2>
+                    <ul class="recommendation-list">
+                        {% for recommendation in result_data.recommendations %}
+                            <li>{{ recommendation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Detailed Work Histories -->
+                <div class="result-section">
+                    <h2 class="section-title">💡 Detailed Company Histories</h2>
+                    <div class="work-list">
+                        {% for job in result_data.detailed_work_histories %}
+                            <article class="work-entry">
+                                <header>
+                                    <div class="title-row">
+                                        {% if job is mapping %}
+                                            <h3 class="role"><span style="color: rgb(0, 255, 149);">{{ job.company }}</span> ({{job.tenure_period}})</h3>
+                                        {% endif %}
+                                    </div>
+                                </header>
+
+                                {% if job is mapping and (job.achievements or job.key_developments or job.highlights) %}
+                                    <ul class="responsibilities">
+                                        {% for k in job.achievements or job.key_developments or job.highlights %}
+                                            {% for key, value in k.items() %}
+                                                <li style="margin-bottom: 10px;">
+                                                    <strong>{{ key }}</strong>
+                                                    <ul style="line-height: 1.2; padding-left: 40px;">
+                                                        {% for val in value %}
+                                                            <li style="margin-bottom: 10px;">{{ val }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </article>
+                        {% else %}
+                            <p>No work history found.</p>
+                        {% endfor %}    
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; 2025 WiseHire Technology. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // PDF 导出功能
+        document.getElementById('downloadPdf').addEventListener('click', function (e) {
+            e.preventDefault();
+            
+            // 显示加载提示
+            const originalText = this.textContent;
+            this.textContent = 'Generating PDF...';
+            this.disabled = true;
+            
+            // 获取报告内容
+            const element = document.getElementById('reportContent');
+            const candidateName = "{{ result_data.full_name }}" || "resume_report";
+            const filename = candidateName.trim() + "_analysis_report.pdf";
+            
+            // PDF配置选项
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait' 
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+            
+            // 生成PDF
+            html2pdf().set(opt).from(element).save().then(() => {
+                // 恢复按钮状态
+                this.textContent = originalText;
+                this.disabled = false;
+            }).catch(error => {
+                console.error('PDF generation error:', error);
+                alert('Error generating PDF. Please try again.');
+                this.textContent = originalText;
+                this.disabled = false;
+            });
+        });
+
+        // 添加打印样式支持
+        const style = document.createElement('style');
+        style.textContent = `
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #reportContent, #reportContent * {
+                    visibility: visible;
+                }
+                #reportContent {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

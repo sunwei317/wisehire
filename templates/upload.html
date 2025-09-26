@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resume | WiseHire Technology</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0e2b 0%, #1a1f4b 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        /* Header styles */
+        header {
+            background: rgba(10, 14, 39, 0.8);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #40e0d0 0%, #1e90ff 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0c0e2b;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .username {
+            color: #40e0d0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .logout-button {
+            background: transparent;
+            border: 1px solid #40e0d0;
+            color: #40e0d0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .logout-button:hover {
+            background: rgba(64, 224, 208, 0.1);
+        }
+        
+        /* Main content area */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .upload-container {
+            background: rgba(18, 22, 51, 0.7);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(64, 224, 208, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(64, 224, 208, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+        
+        .upload-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #c0c0c0;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed rgba(64, 224, 208, 0.3);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #40e0d0;
+            background: rgba(64, 224, 208, 0.05);
+        }
+        
+        .file-upload-area.error {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.05);
+        }
+        
+        .file-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #40e0d0;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-name {
+            color: #40e0d0;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: rgba(30, 35, 70, 0.7);
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s;
+            resize: vertical;
+            min-height: 150px;
+        }
+        
+        textarea.error {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #40e0d0;
+            box-shadow: 0 0 0 2px rgba(64, 224, 208, 0.2);
+        }
+        
+        .analyze-button {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #40e0d0 0%, #1e90ff 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0c0e2b;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .analyze-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(64, 224, 208, 0.4);
+        }
+        
+        .back-button {
+            background: transparent;
+            border: 1px solid #40e0d0;
+            color: #40e0d0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+            width: 100%;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+        }
+        
+        .back-button:hover {
+            background: rgba(64, 224, 208, 0.1);
+        }
+        
+        /* 错误消息样式 */
+        .error-message {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .field-error {
+            color: #ff6b6b;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .field-error.show {
+            display: block;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 14, 39, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(64, 224, 208, 0.3);
+            border-top: 5px solid #40e0d0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        nav a:hover {
+            color: #40e0d0;
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            transition: width 0.3s;
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        .loading-text {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+            text-align: center;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Footer styles */
+        footer {
+            background: rgba(10, 14, 39, 0.9);
+            padding: 1.5rem 2rem;
+            border-top: 1px solid rgba(64, 224, 208, 0.2);
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .copyright {
+            color: #808080;
+            font-size: 0.85rem;
+        }
+
+        .logo-image {
+    height: 35px; /* 缩小高度 */
+    width: auto;
+    max-width: 150px; /* 限制最大宽度 */
+    object-fit: contain;
+}
+
+/* 或者更小的尺寸 */
+.logo-image.small {
+    height: 30px;
+    max-width: 120px;
+}
+
+/* 移动端更小 */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 28px;
+        max-width: 100px;
+    }
+}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+            <img src="/static/images/logo.png" alt="HireWise" class="logo-image">
+        </div>
+
+
+        <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <div class="user-info">
+                        <span class="username">Welcome, {{ username }}!</span>
+                        <a href="/" class="logout-button">Logout</a>
+                    </div>
+                </ul>
+            </nav>
+            
+        </div>
+    </header>
+    
+    <main>
+        <div class="upload-container">
+            <div class="upload-header">
+                <h1>Upload Resume</h1>
+                <p>Analyze your resume against job descriptions</p>
+            </div>
+            
+            <!-- 错误消息显示区域 -->
+            <div id="errorMessage" class="error-message"></div>
+            
+            <form id="uploadForm" action="/analyze" method="post" enctype="multipart/form-data">
+                <!-- 隐藏字段传递username -->
+                <input type="hidden" name="username" value="{{ username }}">
+                
+                <div class="form-group">
+                    <label for="file">Resume (PDF, DOCX, TXT)</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="file-icon">📄</div>
+                        <p>Drag & drop your resume here or click to browse</p>
+                        <p>Supported formats: PDF, DOCX, TXT (Max size: 5MB)</p>
+                        <input type="file" name="file" id="file" class="file-input" accept=".pdf,.doc,.docx,.txt" required>
+                    </div>
+                    <div id="fileName" class="file-name"></div>
+                    <div id="fileError" class="field-error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="job_description">Job Description</label>
+                    <textarea name="job_description" id="job_description" placeholder="Paste the job description here..." required></textarea>
+                    <div id="jobDescriptionError" class="field-error"></div>
+                </div>
+                
+                <button type="submit" class="analyze-button">Submit Task</button>
+            </form>
+            
+            <a href="/dashboard?username={{ username }}" class="back-button">Back to Dashboard</a>
+        </div>
+    </main>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">
+            <p id="loadingMessage">🔍 Analyzing your resume...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; 2023 WiseHire Technology. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // File upload functionality
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('file');
+        const fileName = document.getElementById('fileName');
+        const fileError = document.getElementById('fileError');
+        const jobDescription = document.getElementById('job_description');
+        const jobDescriptionError = document.getElementById('jobDescriptionError');
+        const uploadForm = document.getElementById('uploadForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Click on area to trigger file input
+        fileUploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            clearErrors();
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const allowedTypes = ['application/pdf', 
+                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                    'application/msword', 'text/plain'];
+                
+                if (allowedTypes.some(type => file.type === type) || 
+                    file.name.toLowerCase().endsWith('.docx') ||
+                    file.name.toLowerCase().endsWith('.doc') ||
+                    file.name.toLowerCase().endsWith('.txt')) {
+                    
+                    fileName.textContent = `Selected file: ${file.name}`;
+                    fileUploadArea.classList.remove('error');
+                    fileError.classList.remove('show');
+                } else {
+                    showFieldError(fileError, 'Please select a PDF, DOCX, or TXT file.');
+                    fileUploadArea.classList.add('error');
+                    this.value = '';
+                    fileName.textContent = '';
+                }
+            }
+        });
+        
+        // Real-time validation for job description
+        jobDescription.addEventListener('input', function() {
+            clearErrors();
+            if (this.value.trim().length > 0) {
+                jobDescription.classList.remove('error');
+                jobDescriptionError.classList.remove('show');
+            }
+        });
+        
+        // Form submission with validation
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            let hasErrors = false;
+            
+            // Validate file
+            if (!fileInput.files.length) {
+                showFieldError(fileError, 'Please select a resume file');
+                fileUploadArea.classList.add('error');
+                hasErrors = true;
+            }
+            
+            // Validate job description
+            const jobDescValue = jobDescription.value.trim();
+            if (!jobDescValue) {
+                showFieldError(jobDescriptionError, 'Please provide job description');
+                jobDescription.classList.add('error');
+                hasErrors = true;
+            } else if (jobDescValue.length < 10) {
+                showFieldError(jobDescriptionError, 'Job description must be at least 10 characters long');
+                jobDescription.classList.add('error');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                showMainError('Please fix the errors above before submitting.');
+                return;
+            }
+            
+            // Show loading overlay
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.textContent = '🔍 Analyzing your resume...';
+            loadingOverlay.style.display = 'flex';
+            
+            // Submit the form
+            this.submit();
+        });
+        
+        // Error handling functions
+        function showMainError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+        
+        function showFieldError(fieldElement, message) {
+            fieldElement.textContent = message;
+            fieldElement.classList.add('show');
+        }
+        
+        function clearErrors() {
+            errorMessage.classList.remove('show');
+            fileError.classList.remove('show');
+            jobDescriptionError.classList.remove('show');
+            fileUploadArea.classList.remove('error');
+            jobDescription.classList.remove('error');
+        }
+        
+        // Handle drag and drop
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#40e0d0';
+            fileUploadArea.style.background = 'rgba(64, 224, 208, 0.1)';
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.borderColor = '';
+            fileUploadArea.style.background = '';
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '';
+            fileUploadArea.style.background = '';
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        });
+        
+        // Check for URL parameters to show errors from backend
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            if (error) {
+                showMainError(decodeURIComponent(error));
+            }
+        });
+    </script>
+</body>
+</html>
