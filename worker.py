@@ -119,7 +119,23 @@ def extract_text_from_docx(file_path):
         full_text.append(para.text)
     return "\n".join(full_text)
 
-
+def extract_text_from_doc(file_path: str) -> str:
+    """
+    Extract text from .doc files
+    You may need to install python-docx or other libraries
+    """
+    try:
+        # For .doc files, you might need antiword or other tools
+        # This is a placeholder implementation
+        import subprocess
+        result = subprocess.run(['antiword', file_path], capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout
+        else:
+            # Fallback: try with catdoc or other tools
+            raise Exception("DOC file extraction failed")
+    except Exception as e:
+        raise Exception(f"Failed to extract text from DOC file: {str(e)}")
 def extract_text_from_txt(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         text = f.read()
@@ -327,64 +343,74 @@ def analyze_working_history(work_history) -> dict:
     return response.output_text
 
 @celery_app.task
-def submit_pipeline(task_id,user_id,resume_text,job_description):
+def submit_pipeline(task_ids,user_id,resume_texts,job_description):
 
     print("start analysis, please wait")
-# 获取工作历史
-    work_histories = extract_working_history_deepseek(resume_text)
 
-    if isinstance(work_histories, str):
-        work_histories = json.loads(work_histories)
+    for (task_id,resume_text) in zip(task_ids,resume_texts):
+        # 获取工作历史
+        work_histories = extract_working_history_deepseek(resume_text)
 
-    work_histories = work_histories.get("work_history", [])
+        if isinstance(work_histories, str):
+            work_histories = json.loads(work_histories)
 
-    all_work_history_summary = []
+        work_histories = work_histories.get("work_history", [])
 
-    # 对每个雇主进行详细分析
-    for work_history in work_histories:
-        summary = analyze_working_history(work_history)
-        all_work_history_summary.append(summary.replace('\"','"'))
+        all_work_history_summary = []
 
-    # 匹配评分
-    match_score_result = match_score(
-        resume_text, json.dumps(all_work_history_summary), job_description
-    )
+        # 对每个雇主进行详细分析
+        for work_history in work_histories:
+            summary = analyze_working_history(work_history)
+            all_work_history_summary.append(summary.replace('\"','"'))
 
-    if isinstance(match_score_result, str):
+        # 匹配评分
+        match_score_result = match_score(
+            resume_text, json.dumps(all_work_history_summary), job_description
+        )
+
+        if isinstance(match_score_result, str):
+            try:
+                match_score_result = json.loads(match_score_result)
+            except json.JSONDecodeError as e:
+                print("Failed to parse:", e)
+                raise HTTPException(status_code=500, detail="Error parsing analysis result")
         try:
-            match_score_result = json.loads(match_score_result)
-        except json.JSONDecodeError as e:
-            print("Failed to parse:", e)
-            raise HTTPException(status_code=500, detail="Error parsing analysis result")
+            # 构建分析结果
+            analysis_result = {
+                "full_name": match_score_result.get("name", "unknown"),
+                "match_score": str(match_score_result["overall_score"]),
+                "analysis_report": match_score_result["detailed_analysis"],
+                "score_breakdown": match_score_result["score_breakdown"],
+                "strengths": match_score_result["strengths"],
+                "gaps": match_score_result["gaps"],
+                "recommendations": match_score_result["recommendation"] + match_score_result["recommendation_explanation"],
+                "interview_questions": match_score_result["interview_questions"],
+                "interview_focus": match_score_result["interview_focus"],
+                "detailed_work_histories": all_work_history_summary,
+            }
 
-    # 构建分析结果
-    analysis_result = {
-        "full_name": match_score_result.get("name", "unknown"),
-        "match_score": str(match_score_result["overall_score"]),
-        "analysis_report": match_score_result["detailed_analysis"],
-        "score_breakdown": match_score_result["score_breakdown"],
-        "strengths": match_score_result["strengths"],
-        "gaps": match_score_result["gaps"],
-        "recommendations": match_score_result["recommendation"] + match_score_result["recommendation_explanation"],
-        "interview_questions": match_score_result["interview_questions"],
-        "interview_focus": match_score_result["interview_focus"],
-        "detailed_work_histories": all_work_history_summary,
-    }
+            # 保存分析结果
+            result_file_path = os.path.join("analysis_reports", f"task_id_{task_id}_user_{user_id}.json")
+            with open(result_file_path, "w", encoding='utf-8') as _json:
+                json.dump(analysis_result, _json, ensure_ascii=False, indent=4)
 
-    # 保存分析结果
-    result_file_path = os.path.join("analysis_reports", f"task_id_{task_id}_user_{user_id}.json")
-    with open(result_file_path, "w", encoding='utf-8') as _json:
-        json.dump(analysis_result, _json, ensure_ascii=False, indent=4)
-
-    # 更新任务状态
-    update_data = {
-        "task_id": task_id,
-        "status": "completed",
-        "result_json": result_file_path,
-        "updated_at": datetime.now()
-    }
-    update_task(update_data)
-    
+            # 更新任务状态
+            update_data = {
+                "task_id": task_id,
+                "status": "completed",
+                "result_json": result_file_path,
+                "updated_at": datetime.now()
+            }
+            update_task(update_data)
+        except Exception as e:
+            print(e)
+            update_data = {
+                    "task_id": task_id,
+                    "status": "failed",
+                    "updated_at": datetime.now()
+                }
+            update_task(update_data)
+            
     print("Analysis completed successfully!")
 
     return None
