@@ -195,6 +195,11 @@
             font-weight: 500;
         }
         
+        .status-failed {
+            color: #d9534f;
+            font-weight: 500;
+        }
+        
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -216,7 +221,7 @@
         }
         
         .delete-button {
-            background: #d9534f;
+            background: #51c92c;
             color: white;
             border: none;
             padding: 4px 12px;
@@ -227,10 +232,28 @@
         }
         
         .delete-button:hover {
-            background: #c9302c;
+            background: #51c92c;
             transform: translateY(-1px);
         }
         
+
+
+        .delete-failed-button {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+        
+        .delete-failed-button:hover {
+            background: #c9302c;
+            transform: translateY(-1px);
+        }
+
         .no-tasks {
             text-align: center;
             padding: 3rem;
@@ -303,30 +326,29 @@
             }
         }
 
-/* 删除确认模态框样式 */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
+        /* 删除确认模态框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
 
-.modal-content {
-    background: rgba(18, 22, 51, 0.95);
-    padding: 2rem;
-    border-radius: 12px;
-    border: 1px solid rgba(64, 224, 208, 0.3);
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-}
-
+        .modal-content {
+            background: rgba(18, 22, 51, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -398,7 +420,9 @@
                             <td class="action-buttons">
                                 {% if task.status == 'completed' and task.result_json %}
                                 <a href="/result/{{ task.id }}?username={{ username }}" class="view-button">View Report</a>
-                                <button class="delete-button" onclick="showDeleteModal({{ task.id }})">Delete</button>
+                                <button class="delete-button" onclick="showDeleteModal({{ task.id }}, 'completed')">Delete</button>
+                                {% elif task.status == 'failed' %}
+                                <button class="delete-failed-button" onclick="showDeleteModal({{ task.id }}, 'failed')">Delete</button>
                                 {% else %}
                                 <span style="color: #666; font-size: 0.85rem;">No actions available</span>
                                 {% endif %}
@@ -426,16 +450,28 @@
         </div>
     </footer>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal" style="display: none;">
+        <div class="modal-content">
+            <h3 style="color: #ff6b6b; margin-bottom: 1rem;">Confirm Delete</h3>
+            <p id="deleteModalMessage">Are you sure you want to delete this analysis report? This action cannot be undone.</p>
+            <div class="modal-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                <button id="confirmDelete" style="background: #d9534f; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer;">Yes, Delete</button>
+                <button id="cancelDelete" style="background: transparent; border: 1px solid #40e0d0; color: #40e0d0; padding: 8px 20px; border-radius: 6px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 全局变量
         const username = "{{ username }}";
         let currentTasks = [];
         let updateInterval;
         let taskToDelete = null;
+        let taskStatusToDelete = null;
 
         // 安全地解析JSON数据
         try {
-            // 使用默认值避免解析错误
             const tasksJson = {{ tasks_json | safe if tasks_json else '[]' }};
             currentTasks = Array.isArray(tasksJson) ? tasksJson : [];
         } catch (error) {
@@ -499,11 +535,19 @@
                 }
                 
                 let actionsHtml;
-                if (task.status === 'completed' && task.result_json) {
+                const status = (task.status || 'unknown').toLowerCase();
+                
+                if (status === 'completed' && task.result_json) {
                     actionsHtml = `
                         <div class="action-buttons">
                             <a href="/result/${task.id}?username=${username}" class="view-button">View Report</a>
-                            <button class="delete-button" onclick="showDeleteModal(${task.id})">Delete</button>
+                            <button class="delete-button" onclick="showDeleteModal(${task.id}, 'completed')">Delete</button>
+                        </div>
+                    `;
+                } else if (status === 'failed') {
+                    actionsHtml = `
+                        <div class="action-buttons">
+                            <button class="delete-failed-button" onclick="showDeleteModal(${task.id}, 'failed')">Delete</button>
                         </div>
                     `;
                 } else {
@@ -516,7 +560,6 @@
                     'No description';
                 
                 const submittedAt = task.submitted_at || 'Unknown';
-                const status = task.status || 'unknown';
                 const resumeFilename = task.resume_filename || 'Unknown file';
                 const taskId = task.id || 'Unknown';
                 
@@ -587,12 +630,139 @@
             }
         }
         
-        // 页面加载完成后启动实时更新
+        // 显示删除确认模态框
+        function showDeleteModal(taskId, status) {
+            taskToDelete = taskId;
+            taskStatusToDelete = status;
+            const modal = document.getElementById('deleteModal');
+            const message = document.getElementById('deleteModalMessage');
+            
+            if (status === 'failed') {
+                message.textContent = 'Are you sure you want to delete this failed task? This action cannot be undone.';
+            } else {
+                message.textContent = 'Are you sure you want to delete this analysis report? This action cannot be undone.';
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        // 隐藏删除确认模态框
+        function hideDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'none';
+            taskToDelete = null;
+            taskStatusToDelete = null;
+        }
+        
+        // 删除任务函数
+        async function deleteTask(taskId) {
+            try {
+                console.log('Deleting task:', taskId);
+                
+                const response = await fetch(`/api/tasks/${taskId}?username=${encodeURIComponent(username)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Delete successful:', result);
+                    
+                    // 从UI中移除任务行
+                    const taskRow = document.getElementById(`task-${taskId}`);
+                    if (taskRow) {
+                        taskRow.style.opacity = '0.5';
+                        setTimeout(() => {
+                            taskRow.remove();
+                            
+                            // 检查是否还有任务，如果没有显示空状态
+                            const tableBody = document.getElementById('tasksTableBody');
+                            if (!tableBody || tableBody.children.length === 0) {
+                                const tasksContainer = document.getElementById('tasksContainer');
+                                tasksContainer.innerHTML = `
+                                    <div class="no-tasks">
+                                        <h3>No analysis tasks yet</h3>
+                                        <p>Create your first resume analysis task to get started!</p>
+                                        <a href="/upload?username=${username}" class="new-task-button" style="display: inline-block; margin-top: 1rem;">Create New Submission</a>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    }
+                    
+                    // 从当前任务列表中移除
+                    currentTasks = currentTasks.filter(task => task.id !== taskId);
+                    
+                    hideDeleteModal();
+                    
+                    // 显示成功消息
+                    showNotification('Task deleted successfully!', 'success');
+                    
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                hideDeleteModal();
+                showNotification('Error deleting task: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示通知函数
+        function showNotification(message, type = 'info') {
+            // 移除现有通知
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                transition: all 0.3s;
+                ${type === 'success' ? 'background: #4CAF50;' : ''}
+                ${type === 'error' ? 'background: #d9534f;' : ''}
+                ${type === 'info' ? 'background: #2196F3;' : ''}
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // 事件监听器
         document.addEventListener('DOMContentLoaded', function() {
+            // 删除确认按钮事件
+            document.getElementById('confirmDelete').addEventListener('click', function() {
+                if (taskToDelete) {
+                    deleteTask(taskToDelete);
+                }
+            });
+            
+            // 取消删除按钮事件
+            document.getElementById('cancelDelete').addEventListener('click', hideDeleteModal);
+            
+            // 点击模态框外部关闭
+            document.getElementById('deleteModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideDeleteModal();
+                }
+            });
+            
             // 初始渲染
             updateTasksTable(currentTasks);
-            
-            // 启动实时更新
             startRealTimeUpdates();
             
             // 当页面不可见时暂停更新，可见时恢复更新
@@ -609,145 +779,6 @@
         window.addEventListener('beforeunload', function() {
             stopRealTimeUpdates();
         });
-        
-        // 删除确认模态框
-    const deleteModal = document.createElement('div');
-    deleteModal.innerHTML = `
-        <div class="modal-overlay" id="deleteModal" style="display: none;">
-            <div class="modal-content">
-                <h3 style="color: #ff6b6b; margin-bottom: 1rem;">Confirm Delete</h3>
-                <p>Are you sure you want to delete this analysis report? This action cannot be undone.</p>
-                <div class="modal-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-                    <button id="confirmDelete" style="background: #d9534f; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer;">Yes, Delete</button>
-                    <button id="cancelDelete" style="background: transparent; border: 1px solid #40e0d0; color: #40e0d0; padding: 8px 20px; border-radius: 6px; cursor: pointer;">Cancel</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(deleteModal);
-
-    // 显示删除确认模态框
-    function showDeleteModal(taskId) {
-        taskToDelete = taskId;
-        const modal = document.getElementById('deleteModal');
-        modal.style.display = 'flex';
-    }
-    
-    // 隐藏删除确认模态框
-    function hideDeleteModal() {
-        const modal = document.getElementById('deleteModal');
-        modal.style.display = 'none';
-        taskToDelete = null;
-    }
-    
-    // 删除任务函数
-    async function deleteTask(taskId) {
-        try {
-            console.log('Deleting task:', taskId);
-            
-            const response = await fetch(`/api/tasks/${taskId}?username=${encodeURIComponent(username)}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('Delete successful:', result);
-                
-                // 从UI中移除任务行
-                const taskRow = document.getElementById(`task-${taskId}`);
-                if (taskRow) {
-                    taskRow.style.opacity = '0.5';
-                    setTimeout(() => {
-                        taskRow.remove();
-                        
-                        // 检查是否还有任务，如果没有显示空状态
-                        const tableBody = document.getElementById('tasksTableBody');
-                        if (!tableBody || tableBody.children.length === 0) {
-                            const tasksContainer = document.getElementById('tasksContainer');
-                            tasksContainer.innerHTML = `
-                                <div class="no-tasks">
-                                    <h3>No analysis tasks yet</h3>
-                                    <p>Create your first resume analysis task to get started!</p>
-                                    <a href="/upload?username=${username}" class="new-task-button" style="display: inline-block; margin-top: 1rem;">Create New Submission</a>
-                                </div>
-                            `;
-                        }
-                    }, 300);
-                }
-                
-                // 从当前任务列表中移除
-                currentTasks = currentTasks.filter(task => task.id !== taskId);
-                
-                hideDeleteModal();
-                
-                // 显示成功消息
-                showNotification('Task deleted successfully!', 'success');
-                
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Delete failed');
-            }
-        } catch (error) {
-            console.error('Error deleting task:', error);
-            hideDeleteModal();
-            showNotification('Error deleting task: ' + error.message, 'error');
-        }
-    }
-    
-    // 显示通知函数
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 6px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            transition: all 0.3s;
-            ${type === 'success' ? 'background: #4CAF50;' : ''}
-            ${type === 'error' ? 'background: #d9534f;' : ''}
-            ${type === 'info' ? 'background: #2196F3;' : ''}
-        `;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // 3秒后自动移除
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
-    
-    // 事件监听器
-    document.addEventListener('DOMContentLoaded', function() {
-        // 删除确认按钮事件
-        document.getElementById('confirmDelete')?.addEventListener('click', function() {
-            if (taskToDelete) {
-                deleteTask(taskToDelete);
-            }
-        });
-        
-        // 取消删除按钮事件
-        document.getElementById('cancelDelete')?.addEventListener('click', hideDeleteModal);
-        
-        // 点击模态框外部关闭
-        document.getElementById('deleteModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideDeleteModal();
-            }
-        });
-        
-        // 初始渲染
-        updateTasksTable(currentTasks);
-        startRealTimeUpdates();
-    });
-
     </script>
 </body>
 </html>
