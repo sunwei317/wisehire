@@ -523,8 +523,8 @@
     <main>
         <div class="upload-container">
             <div class="upload-header">
-                <h1>Upload Resume</h1>
-                <p>Analyze your resume against job descriptions</p>
+                <h1> Job Description and Candidates' Resumes</h1>
+                
             </div>
             
             <!-- 错误消息显示区域 -->
@@ -536,22 +536,24 @@
                 <input type="hidden" name="username" value="{{ username }}">
                 
                 <div class="form-group">
+                    <label for="job_description">Job Description</label>
+                    <textarea name="job_description" id="job_description" placeholder="Paste the job description here..." required></textarea>
+                    <div id="jobDescriptionError" class="field-error"></div>
+                </div>
+
+                <div class="form-group">
                     <label for="file">Resume (PDF, DOCX, TXT)</label>
                     <div class="file-upload-area" id="fileUploadArea">
                         <div class="file-icon">📄</div>
                         <p>Drag & drop your resume here or click to browse</p>
-                        <p>Supported formats: PDF, DOCX, TXT (Max size: 5MB)</p>
+                        
                         <input type="file" name="file" id="file" class="file-input" accept=".pdf,.doc,.docx,.txt" required>
                     </div>
                     <div id="fileName" class="file-name"></div>
                     <div id="fileError" class="field-error"></div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="job_description">Job Description</label>
-                    <textarea name="job_description" id="job_description" placeholder="Paste the job description here..." required></textarea>
-                    <div id="jobDescriptionError" class="field-error"></div>
-                </div>
+
                 
                 <button type="submit" class="analyze-button" id="submitButton">Submit Task</button>
             </form>

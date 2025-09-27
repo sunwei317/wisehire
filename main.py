@@ -229,8 +229,9 @@ async def analyze_resume(
             raise HTTPException(status_code=400, detail="File must be PDF, DOCX, or TXT format")
 
         # 保存上传的文件
-        file_path = os.path.join("temp", f"resume_{uuid.uuid4().hex}.{file_extension}")
-        
+        file_path = os.path.join("static/uploads",f"task_id_{task_id}_user_{user_id}.{file_extension}")
+
+
         with open(file_path, "wb") as f:
             f.write(file_data)
 

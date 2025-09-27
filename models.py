@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import os
-
+import glob
 Base = declarative_base()
 
 class User(Base):
@@ -177,10 +177,19 @@ def update_task(task):
 
 def delete_task_from_db(task_id, user_id):
     
-        to_be_deleted=os.path.join("analysis_reports",f"task_id_{task_id}_user_{user_id}.json")
-        if os.path.exists(to_be_deleted):
-            os.remove(to_be_deleted)
+        to_be_deleted_report=os.path.join("analysis_reports",f"task_id_{task_id}_user_{user_id}.json")
+        if os.path.exists(to_be_deleted_report):
+            os.remove(to_be_deleted_report)
+
+
+        to_be_deleted_resume = os.path.join("static/uploads",f"task_id_{task_id}_user_{user_id}.*")
         
+        files = glob.glob(to_be_deleted_resume)
+        for file_path in files:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                    
+
         # 如果环境变量不存在，使用默认连接参数
         conn = psycopg2.connect(
                 host='localhost',
