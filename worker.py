@@ -465,6 +465,46 @@ def match_score_from_deepseek(
     # except Exception as e:
     #     return {"error": str(e)}
 
+def match_score_only_deepseek(
+    resume_text: str, job_description: str
+) -> Dict[str, Any]:
+    
+    # Create the prompt for the analysis
+    prompt = f"""
+    You are an expert HR analyst. Given a candidate's resume, and a job description,
+    根据不同领域的job description, 对候选人的不同方面的要求也是不一样的。仔细分析提供的job description, 对于不同的方面给出不同的权重来计算匹配成绩。
+    provide a matching score, the score is between 0 and 100, where 0 means no match at all and 100 means perfect match.
+    
+
+    RESUME:
+    {resume_text}
+
+    JOB DESCRIPTION:
+    {job_description}
+
+    """
+
+    response = deepseek_client.chat.completions.create(
+        model="deepseek-chat",  # Use the latest model available
+        messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert HR analyst with 20+ years of experience in candidate evaluation and job matching.",
+                },
+                {"role": "user", "content": prompt},
+                
+            ],
+            temperature=0.1,  # Lower temperature for more deterministic output
+            max_tokens=10,
+    )
+
+    # Extract the response content
+    match_score = response.choices[0].message.content.strip()
+
+    # Try to parse the JSON response
+    
+    return match_score
+
 
 def analyze_working_history(work_history) -> dict:
 
@@ -519,77 +559,89 @@ def analyze_working_history(work_history) -> dict:
     return response.output_text
 
 @celery_app.task
-def submit_pipeline(task_ids,user_id,resume_texts,job_description):
+def submit_pipeline(task_ids,user_id,resume_texts,job_description,score_threshold=10):
 
     print("start analysis, please wait")
-    # job_title=get_job_title_deepseek(job_description.strip())
-    # print(job_title)
-
+    
     for (task_id,resume_text) in zip(task_ids,resume_texts):
-        # 获取工作历史
-        work_histories = extract_working_history_deepseek(resume_text)
 
-        if isinstance(work_histories, str):
-            work_histories = json.loads(work_histories)
-
-        work_histories = work_histories.get("work_history", [])
-
-        all_work_history_summary = []
-
-        # 对每个雇主进行详细分析
-        for work_history in work_histories:
-            summary = analyze_working_history(work_history)
-            all_work_history_summary.append(summary.replace('\"','"'))
-
-        # 匹配评分
-        match_score_result = match_score_from_deepseek(
-            resume_text, json.dumps(all_work_history_summary), job_description
-        )
-
-        if isinstance(match_score_result, str):
-            try:
-                match_score_result = json.loads(match_score_result)
-            except json.JSONDecodeError as e:
-                print("Failed to parse:", e)
-                raise HTTPException(status_code=500, detail="Error parsing analysis result")
-        try:
-            # 构建分析结果
-            analysis_result = {
-                "full_name": match_score_result.get("name", "unknown"),
-                "match_score": str(match_score_result["overall_score"]),
-                "analysis_report": match_score_result["detailed_analysis"],
-                "score_breakdown": match_score_result["score_breakdown"],
-                "strengths": match_score_result["strengths"],
-                "gaps": match_score_result["gaps"],
-                "recommendations": match_score_result["recommendation"] + match_score_result["recommendation_explanation"],
-                "interview_questions": match_score_result["interview_questions"],
-                "interview_focus": match_score_result["interview_focus"],
-                "detailed_work_histories": all_work_history_summary,
-            }
-
-            # 保存分析结果
-            result_file_path = os.path.join("analysis_reports", f"task_id_{task_id}_user_{user_id}.json")
-            with open(result_file_path, "w", encoding='utf-8') as _json:
-                json.dump(analysis_result, _json, ensure_ascii=False, indent=4)
-
-            # 更新任务状态
-            update_data = {
-                "task_id": task_id,
-                "status": "completed",
-                "score": analysis_result["match_score"],
-                "candidate": analysis_result["full_name"],
-                "result_json": result_file_path,
-                "updated_at": datetime.now()
-            }
-            update_task(update_data)
-        except Exception as e:
-            print(e)
-            update_data = {
+        match_score=match_score_only_deepseek(resume_texts,job_description)
+        if float(match_score)<score_threshold:
+                            # 更新任务状态
+                update_data = {
                     "task_id": task_id,
-                    "status": "failed",
+                    "status": "completed",
+                    "score": match_score,
+                    "candidate": analysis_result["full_name"],
+                    "result_json": "",
                     "updated_at": datetime.now()
                 }
-            update_task(update_data)
+                update_task(update_data)
+        else:
+            # 获取工作历史
+            work_histories = extract_working_history_deepseek(resume_text)
+
+            if isinstance(work_histories, str):
+                work_histories = json.loads(work_histories)
+
+            work_histories = work_histories.get("work_history", [])
+
+            all_work_history_summary = []
+
+            # 对每个雇主进行详细分析
+            for work_history in work_histories:
+                summary = analyze_working_history(work_history)
+                all_work_history_summary.append(summary.replace('\"','"'))
+
+            # 匹配评分
+            match_score_result = match_score_from_deepseek(
+                resume_text, json.dumps(all_work_history_summary), job_description
+            )
+
+            if isinstance(match_score_result, str):
+                try:
+                    match_score_result = json.loads(match_score_result)
+                except json.JSONDecodeError as e:
+                    print("Failed to parse:", e)
+                    raise HTTPException(status_code=500, detail="Error parsing analysis result")
+            try:
+                # 构建分析结果
+                analysis_result = {
+                    "full_name": match_score_result.get("name", "unknown"),
+                    "match_score": str(match_score_result["overall_score"]),
+                    "analysis_report": match_score_result["detailed_analysis"],
+                    "score_breakdown": match_score_result["score_breakdown"],
+                    "strengths": match_score_result["strengths"],
+                    "gaps": match_score_result["gaps"],
+                    "recommendations": match_score_result["recommendation"] + match_score_result["recommendation_explanation"],
+                    "interview_questions": match_score_result["interview_questions"],
+                    "interview_focus": match_score_result["interview_focus"],
+                    "detailed_work_histories": all_work_history_summary,
+                }
+
+                # 保存分析结果
+                result_file_path = os.path.join("analysis_reports", f"task_id_{task_id}_user_{user_id}.json")
+                with open(result_file_path, "w", encoding='utf-8') as _json:
+                    json.dump(analysis_result, _json, ensure_ascii=False, indent=4)
+
+                # 更新任务状态
+                update_data = {
+                    "task_id": task_id,
+                    "status": "completed",
+                    "score": analysis_result["match_score"],
+                    "candidate": analysis_result["full_name"],
+                    "result_json": result_file_path,
+                    "updated_at": datetime.now()
+                }
+                update_task(update_data)
+            except Exception as e:
+                print(e)
+                update_data = {
+                        "task_id": task_id,
+                        "status": "failed",
+                        "updated_at": datetime.now()
+                    }
+                update_task(update_data)
 
     print("Analysis completed successfully!")
 
