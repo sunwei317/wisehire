@@ -63,6 +63,7 @@ async def dashboard_page(request: Request, username: str = None, db: Session = D
         tasks_data.append({
             "id": task.id,
             "resume_filename": task.resume_filename,
+            "job_title": task.job_title,
             "job_description": task.job_description[:50] + "..." if len(task.job_description) > 50 else task.job_description,
             "submitted_at": task.submitted_at.strftime('%Y-%m-%d %H:%M'),
             "status": task.status,
@@ -108,18 +109,6 @@ async def upload_page(request: Request, username: str = None, db: Session = Depe
     return templates.TemplateResponse("upload.html", {"request": request, "username": username})
 
 
-# # Add this POST route to handle the form submission
-# @app.post("/upload")
-# async def upload_resume(
-#     resume_files: List[UploadFile] = File(...),
-#     job_description: str = Form(...),
-#     username: str = Form(...),
-#     db: Session = Depends(get_db)
-# ):
-#     """Handle resume upload and analysis"""
-#     print("POST")
-#     print(job_description)
-#     return await analyze_resume(resume_files, job_description, username, db)
 
 
 @app.post("/login")
@@ -149,9 +138,12 @@ async def get_user_tasks(username: str, db: Session = Depends(get_db)):
         tasks_data.append({
             "id": task.id,
             "resume_filename": task.resume_filename,
+            "job_title": task.job_title,
             "job_description": task.job_description[:50] + "..." if len(task.job_description) > 50 else task.job_description,
             "submitted_at": task.submitted_at.strftime('%Y-%m-%d %H:%M'),
             "status": task.status,
+            "score":task.score,
+            "candidate":task.candidate,
             "result_json": task.result_json[:100] if task.result_json else "",
             "updated_at": task.updated_at.strftime('%Y-%m-%d %H:%M') if task.updated_at else None
         })
@@ -203,102 +195,14 @@ async def result_page(request: Request, task_id: int, username: str, db: Session
 
     return templates.TemplateResponse("result.html", data)
 
-# @app.post("/analyze")
-# async def analyze_resume(
-#     request: Request,
-#     file: UploadFile = File(...),  # 使用 ... 表示必填字段
-#     job_description: str = Form(...),  # 使用 ... 表示必填字段
-#     username: str = Form(...),
-#     db: Session = Depends(get_db)
-# ):
-#     # 验证用户
-#     user = db.query(User).filter(User.username == username).first()
-#     if not user:
-#         raise HTTPException(status_code=401, detail="User not found")
-    
-#     user_id = user.id
-    
-#     # 验证文件类型
-#     allowed_extensions = {'.pdf', '.doc', '.docx', '.txt'}
-#     file_extension = os.path.splitext(file.filename.lower())[1]
-#     if file_extension not in allowed_extensions:
-#         raise HTTPException(
-#             status_code=400, 
-#             detail=f"Unsupported file type. Please provide: {', '.join(allowed_extensions)} documents"
-#         )
-    
-#     # 验证文件内容
-#     file_content = await file.read()
-#     if len(file_content) == 0:
-#         raise HTTPException(status_code=400, detail="Resume file cannot be empty")
-    
-#     # 重置文件指针以便后续使用
-#     await file.seek(0)
-    
-#     # 验证职位描述
-#     job_description = job_description.strip()
-#     if len(job_description.split()) < 10:
-#         raise HTTPException(status_code=400, detail="Job description must be at least 10 words long")
-    
-#     # 创建任务记录
-#     task_data = {
-#         "user_id": user_id,
-#         "resume_filename": file.filename, 
-#         "job_description": job_description, 
-#         "submitted_at": datetime.now(), 
-#         "status": "in_process",
-#         "result_json": "",
-#         "updated_at": datetime.now()
-#     }
 
-#     task_id = create_task(task_data)
-
-#     try:
-#         # 保存文件
-#         file_extension = file.filename.split(".")[-1].lower()
-#         file_data = await file.read()
-        
-#         # 确保文件扩展名有效
-#         if file_extension not in ['pdf', 'docx', 'txt']:
-#             raise HTTPException(status_code=400, detail="File must be PDF, DOCX, or TXT format")
-
-#         # 保存上传的文件
-#         file_path = os.path.join("static/uploads",f"task_id_{task_id}_user_{user_id}.{file_extension}")
-
-
-#         with open(file_path, "wb") as f:
-#             f.write(file_data)
-
-#         # 提取简历文本
-#         if file_extension == "pdf":
-#             resume_text = extract_text_from_pdf(file_data)
-#         elif file_extension == "docx":
-#             resume_text = extract_text_from_docx(file_path)
-#         else:  # txt
-#             resume_text = extract_text_from_txt(file_path)
-
-#         submit_pipeline.delay(task_id,user_id,resume_text,job_description)
-
-#         return JSONResponse(
-#             status_code=200,
-#             content={"message": "Task submitted successfully"}
-#         )
-#     except Exception as e:
-#         # 如果分析过程中出现错误，更新任务状态为失败
-#         update_data = {
-#             "task_id": task_id,
-#             "status": "failed",
-#             "updated_at": datetime.now()
-#         }
-#         update_task(update_data)
-        
-#         print(f"Analysis failed: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.post("/analyze")
 async def analyze_resume(
     request: Request,
     resume_files: List[UploadFile] = File(...),  # Changed to accept multiple files
+    job_title: str = Form(...),
+    job_company: str = Form(...),
     job_description: str = Form(...),
     username: str = Form(...),
     db: Session = Depends(get_db)
@@ -310,6 +214,10 @@ async def analyze_resume(
     
     user_id = user.id
     
+    print(job_title)
+    print(job_company)
+
+
     # 验证至少上传了一个文件
     if not resume_files or len(resume_files) == 0:
         raise HTTPException(status_code=400, detail="At least one resume file is required")
@@ -322,7 +230,6 @@ async def analyze_resume(
     job_description = job_description.strip()
     if len(job_description.split()) < 10:
         raise HTTPException(status_code=400, detail="Job description must be at least 10 words long")
-    
     # 存储所有任务ID和文件信息
     task_ids = []
     task_with_resume_text_ids=[]
@@ -352,9 +259,12 @@ async def analyze_resume(
             task_data = {
                 "user_id": user_id,
                 "resume_filename": file.filename,
+                "job_title": job_title+"|"+job_company,
                 "job_description": job_description,
                 "submitted_at": datetime.now(),
                 "status": "in_process",
+                "score":"",
+                "candidate":"",
                 "result_json": "",
                 "updated_at": datetime.now()
             }

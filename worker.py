@@ -166,6 +166,32 @@ def extract_working_history_deepseek(resume_text: str):
 
     return result
 
+
+def get_job_title_deepseek(job_descrition: str):
+    system_prompt = "You are an expert HR analyst. Given the plain text of a job description, you must analyze it and extract the company and the job title. "
+
+    prompt = f"""this is the job description, {job_descrition}, generate the job title and the company. output is the fromat 
+                                        job_title|company
+    """
+
+    response = deepseek_client.chat.completions.create(
+        model="deepseek-chat",  # Use the latest model available
+        messages=[
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0,
+
+    )
+
+    result = response.choices[0].message.content.strip()
+
+    return result
+
+
 def match_score(
     resume_text: str, working_history: str, job_description: str
 ) -> Dict[str, Any]:
@@ -289,6 +315,156 @@ def match_score(
     except Exception as e:
         return {"error": str(e)}
 
+def match_score_from_deepseek(
+    resume_text: str, working_history: str, job_description: str
+) -> Dict[str, Any]:
+    """
+    Analyze candidate match using ChatGPT API
+
+    Args:
+        working_history: Candidate's work history text
+        job_description: Job description text
+
+    Returns:
+        Dictionary containing analysis results
+    """
+
+    # Set up your OpenAI API key (you should set this as an environment variable)
+    # openai.api_key = os.getenv("OPENAI_API_KEY")
+
+    example_response = {
+        "name": "the candidate's full name from the resume",
+        "overall_score": "int",
+        "detailed_analysis": "string",
+        "score_breakdown": {
+            "string": {
+                "score": "int",
+                "max_score": "int",
+                "explanation": "string",
+            },
+            "string": {
+                "score": "int",
+                "max_score": "int",
+                "explanation": "string",
+            },
+            "string": {
+                "score": "int",
+                "max_score": "int",
+                "explanation": "string",
+            },
+            "string": {
+                "score": "int",
+                "max_score": "int",
+                "explanation": "string",
+            },
+        },
+        "strengths": ["string", "...", "string"],
+        "gaps": ["string", "...", "string"],
+        "recommendation": ["string"],
+        "recommendation_explanation": ["string"],
+        "interview_questions": ["string", "...", "string"],
+        "interview_focus": "string",
+        "history": [
+            {
+                "company": "XYZ Corp",
+                "status_during_tenure": "the company is ... ",
+            }
+        ],
+    }
+
+    # Create the prompt for the analysis
+    prompt = f"""
+    You are an expert HR analyst. Given a candidate's resume, working history and a job description,
+    provide a matching score and detailed analysis.
+
+    RESUME:
+    {resume_text}
+
+    WORKING HISTORY:
+    {working_history}
+
+    JOB DESCRIPTION:
+    {job_description}
+
+    Please provide:
+    1. An overall match score between 0-100
+    2. Detailed analysis of how the score is calculated
+    3. Breakdown of scoring categories
+    4. Strengths and relevant alignment
+    5. Gaps and concerns
+    6. Actionable recommendations
+    7. Interview questions to ask to probe further
+    8. Key focus areas for the interview
+    9. Summary of company status during tenure and reason for leaving
+
+    Instructions:
+    - Be specific and data-backed in your analysis
+    - Avoid generic statements
+
+    根据不同领域的job description, 对候选人的不同方面的要求也是不一样的。仔细分析提供的job description, 对于不同的方面给出不同的权重来计算匹配成绩。
+
+    Format your response as a JSON object with the following structure exactly, including the example values:
+    {json.dumps(example_response, indent=2)}
+
+    Ensure the response is valid JSON.
+    """
+
+    response = deepseek_client.chat.completions.create(
+        model="deepseek-chat",  # Use the latest model available
+        messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert HR analyst with 20+ years of experience in candidate evaluation and job matching.",
+                },
+                {"role": "user", "content": prompt},
+                
+            ],
+            temperature=0.1,  # Lower temperature for more deterministic output
+            max_tokens=1500,
+            response_format={"type": "json_object"},
+    )
+
+    # Extract the response content
+    analysis_text = response.choices[0].message.content.strip()
+
+    # Try to parse the JSON response
+    try:
+        analysis_data = json.loads(analysis_text)
+        return analysis_data
+    except json.JSONDecodeError:
+        # If JSON parsing fails, return the raw text
+        return {"raw_analysis": analysis_text}
+
+
+    # try:
+    #     # Call the ChatGPT API
+    #     response = openai.chat.completions.create(
+    #         model="gpt-4",  # or "gpt-3.5-turbo" for faster/cheaper option
+    #         messages=[
+    #             {
+    #                 "role": "system",
+    #                 "content": "You are an expert HR analyst with 20+ years of experience in candidate evaluation and job matching.",
+    #             },
+    #             {"role": "user", "content": prompt},
+    #         ],
+    #         temperature=0.3,  # Lower temperature for more deterministic output
+    #         max_tokens=1500,
+    #     )
+
+    #     # Extract the response content
+    #     analysis_text = response.choices[0].message.content.strip()
+
+    #     # Try to parse the JSON response
+    #     try:
+    #         analysis_data = json.loads(analysis_text)
+    #         return analysis_data
+    #     except json.JSONDecodeError:
+    #         # If JSON parsing fails, return the raw text
+    #         return {"raw_analysis": analysis_text}
+
+    # except Exception as e:
+    #     return {"error": str(e)}
+
 
 def analyze_working_history(work_history) -> dict:
 
@@ -346,6 +522,8 @@ def analyze_working_history(work_history) -> dict:
 def submit_pipeline(task_ids,user_id,resume_texts,job_description):
 
     print("start analysis, please wait")
+    # job_title=get_job_title_deepseek(job_description.strip())
+    # print(job_title)
 
     for (task_id,resume_text) in zip(task_ids,resume_texts):
         # 获取工作历史
@@ -364,7 +542,7 @@ def submit_pipeline(task_ids,user_id,resume_texts,job_description):
             all_work_history_summary.append(summary.replace('\"','"'))
 
         # 匹配评分
-        match_score_result = match_score(
+        match_score_result = match_score_from_deepseek(
             resume_text, json.dumps(all_work_history_summary), job_description
         )
 
@@ -398,6 +576,8 @@ def submit_pipeline(task_ids,user_id,resume_texts,job_description):
             update_data = {
                 "task_id": task_id,
                 "status": "completed",
+                "score": analysis_result["match_score"],
+                "candidate": analysis_result["full_name"],
                 "result_json": result_file_path,
                 "updated_at": datetime.now()
             }
@@ -410,7 +590,7 @@ def submit_pipeline(task_ids,user_id,resume_texts,job_description):
                     "updated_at": datetime.now()
                 }
             update_task(update_data)
-            
+
     print("Analysis completed successfully!")
 
     return None

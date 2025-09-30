@@ -22,9 +22,12 @@ class AnalysisTask(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
     resume_filename = Column(String(255), nullable=False)
+    job_title= Column(String(50))
     job_description = Column(Text, nullable=False)
     submitted_at = Column(DateTime, default=datetime.utcnow)
     status = Column(String(20), default='in_process')
+    score = Column(String(4))
+    candidate = Column(String(20))
     result_json = Column(Text)
     updated_at = Column(DateTime)
 
@@ -100,8 +103,8 @@ def create_task(task):
         
         # SQL 插入语句
         insert_query = """
-        INSERT INTO analysis_tasks (user_id, resume_filename, job_description, submitted_at, status,result_json,updated_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO analysis_tasks (user_id, resume_filename, job_title,job_description, submitted_at, status,score,candidate,result_json,updated_at)
+        VALUES (%s, %s, %s, %s,%s, %s,%s, %s,%s, %s)
         RETURNING id;
         """
         
@@ -109,10 +112,13 @@ def create_task(task):
         cursor.execute(insert_query, (
             task.get("user_id"), 
             task.get("resume_filename"), 
+            task.get("job_title",""),
             task.get("job_description"), 
             task.get("submitted_at"), 
             task.get("status"),
-            task.get("result_json"),
+            task.get("score",""),
+            task.get("candidate",""),
+            task.get("result_json",""),
             task.get("updated_at")
         ))
         
@@ -148,7 +154,7 @@ def update_task(task):
         
         update_query = """
         UPDATE analysis_tasks 
-        SET status =  %(status)s , result_json = %(result_json)s, updated_at=%(updated_at)s
+        SET status =  %(status)s , score= %(score)s,candidate= %(candidate)s,result_json = %(result_json)s, updated_at=%(updated_at)s
         WHERE id = %(task_id)s;
         """
 
@@ -157,6 +163,8 @@ def update_task(task):
             {
                 "task_id": task.get("task_id"),
                 "status": task.get("status"),
+                "score": task.get("score",""),
+                "candidate": task.get("candidate",""),
                 "result_json": task.get("result_json"),
                 "updated_at": task.get("updated_at"),
             },
@@ -177,7 +185,7 @@ def update_task(task):
 
 def delete_task_from_db(task_id, user_id):
     
-        to_be_deleted_report=os.path.join("analysis_reports",f"task_id_{task_id}_user_{user_id}.json")
+        to_be_deleted_report=os.path.join("analysis_ranalysis_taskseports",f"task_id_{task_id}_user_{user_id}.json")
         if os.path.exists(to_be_deleted_report):
             os.remove(to_be_deleted_report)
 

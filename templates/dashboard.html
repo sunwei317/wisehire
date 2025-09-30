@@ -155,6 +155,58 @@
             background-color: #40e0d0;
         }
         
+        /* Tabs styles */
+        .tabs-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: #b0b0b0;
+            font-size: 1rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab.active {
+            color: #40e0d0;
+            font-weight: 600;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #40e0d0;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .tab:hover:not(.active) {
+            color: #e0e0e0;
+            background: rgba(64, 224, 208, 0.05);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Tasks table styles */
         .tasks-table {
             width: 100%;
             background: rgba(18, 22, 51, 0.7);
@@ -200,6 +252,11 @@
             font-weight: 500;
         }
         
+        .status-pending {
+            color: #9370db;
+            font-weight: 500;
+        }
+        
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -232,12 +289,10 @@
         }
         
         .delete-button:hover {
-            background: #51c92c;
+            background: #45b324;
             transform: translateY(-1px);
         }
         
-
-
         .delete-failed-button {
             background: #d9534f;
             color: white;
@@ -260,19 +315,357 @@
             color: #a0a0a0;
         }
         
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        /* Cards view styles */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
         }
         
-        @keyframes highlight {
-            0% { background: rgba(76, 175, 80, 0.3); }
-            100% { background: transparent; }
+        .job-card {
+            background: rgba(18, 22, 51, 0.7);
+            border-radius: 12px;
+            border: 1px solid rgba(64, 224, 208, 0.2);
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
+            position: relative;
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
         }
         
-        .task-highlight {
-            animation: highlight 2s ease-in-out;
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(64, 224, 208, 0.4);
+        }
+        
+        .card-updating {
+            opacity: 0.7;
+        }
+        
+        .job-card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.2);
+        }
+        
+        .job-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #40e0d0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .job-title::before {
+            content: '💼';
+            font-size: 1.1rem;
+        }
+        
+        .job-description {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .job-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 0.8rem;
+            background: rgba(30, 35, 70, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .stat-item:hover {
+            background: rgba(30, 35, 70, 0.8);
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #40e0d0;
+            margin-bottom: 0.3rem;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Visualization container */
+        .visualization-container {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+        
+        .chart-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pie-chart {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #40e0d0 0% 30%,
+                #1e90ff 30% 60%,
+                #ff6b6b 60% 100%
+            );
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chart-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(18, 22, 51, 0.95);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid rgba(64, 224, 208, 0.3);
+        }
+        
+        .chart-total {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #40e0d0;
+        }
+        
+        .chart-label {
+            font-size: 0.7rem;
+            color: #b0b0b0;
+            text-transform: uppercase;
+        }
+        
+        .chart-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.8rem;
+            background: rgba(30, 35, 70, 0.5);
+            border-radius: 6px;
+            border-left: 3px solid;
+            transition: all 0.3s;
+        }
+        
+        .detail-item:hover {
+            background: rgba(30, 35, 70, 0.8);
+            transform: translateX(5px);
+        }
+        
+        .detail-item.completed {
+            border-left-color: #40e0d0;
+        }
+        
+        .detail-item.in-process {
+            border-left-color: #1e90ff;
+        }
+        
+        .detail-item.failed {
+            border-left-color: #ff6b6b;
+        }
+        
+        .detail-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .detail-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .detail-text {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+        
+        .detail-count {
+            font-weight: 600;
+            color: #40e0d0;
+        }
+        
+        .detail-percent {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+        
+        /* Score distribution */
+        .score-distribution {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(64, 224, 208, 0.2);
+        }
+        
+        .score-title {
+            font-size: 1rem;
+            color: #40e0d0;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .score-title::before {
+            content: '📊';
+        }
+        
+        .score-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .score-label {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            width: 80px;
+        }
+        
+        .score-bar-container {
+            flex: 1;
+            height: 8px;
+            background: rgba(30, 35, 70, 0.8);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .score-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #40e0d0, #1e90ff);
+            border-radius: 4px;
+            transition: width 1s ease-in-out;
+            position: relative;
+        }
+        
+        .score-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        .score-value {
+            font-size: 0.8rem;
+            color: #40e0d0;
+            font-weight: 600;
+            width: 40px;
+            text-align: right;
+        }
+        
+        /* Individual scores */
+        .individual-scores {
+            margin-top: 1rem;
+        }
+        
+        .scores-title {
+            font-size: 0.9rem;
+            color: #40e0d0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .scores-title::before {
+            content: '👤';
+        }
+        
+        .scores-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .score-tag {
+            background: rgba(64, 224, 208, 0.1);
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            color: #40e0d0;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .score-tag:hover {
+            background: rgba(64, 224, 208, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .score-tag.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .score-tag.disabled:hover {
+            background: rgba(64, 224, 208, 0.1);
+            transform: none;
+        }
+        
+        .score-tag::before {
+            content: '⭐';
+            font-size: 0.7rem;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #a0a0a0;
+            font-style: italic;
         }
         
         /* Footer styles */
@@ -292,6 +685,45 @@
         .copyright {
             color: #808080;
             font-size: 0.85rem;
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes highlight {
+            0% { background: rgba(76, 175, 80, 0.3); }
+            100% { background: transparent; }
+        }
+        
+        .task-highlight {
+            animation: highlight 2s ease-in-out;
+        }
+        
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s;
         }
         
         /* Responsive design */
@@ -324,6 +756,26 @@
                 flex-direction: column;
                 gap: 4px;
             }
+            
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                text-align: center;
+            }
+            
+            .visualization-container {
+                flex-direction: column;
+            }
+            
+            .job-stats {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* 删除确认模态框样式 */
@@ -355,7 +807,7 @@
     <header>
         <div class="header-content">
             <div class="logo">
-                <img src="/static/images/logo.png" alt="HireWise" class="logo-image">
+                <img src="/static/images/logo.png" alt="WiseHire" class="logo-image">
             </div>
 
             <nav>
@@ -384,60 +836,244 @@
             <span id="statusText">Real-time updates active</span>
         </div>
         
-        <div class="tasks-table">
-            <div id="tasksContainer">
-                {% if tasks %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Task ID</th>
-                            <th>Resume File</th>
-                            <th>Job Description</th>
-                            <th>Submitted At</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tasksTableBody">
-                        {% for task in tasks %}
-                        <tr id="task-{{ task.id }}" data-task-id="{{ task.id }}">
-                            <td>#{{ task.id }}</td>
-                            <td>{{ task.resume_filename }}</td>
-                            <td>
-                                {# 安全处理job_description，避免NoneType错误 #}
-                                {% if task.job_description %}
-                                    {{ task.job_description[:50] }}{% if task.job_description|length > 50 %}...{% endif %}
-                                {% else %}
-                                    No description
-                                {% endif %}
-                            </td>
-                            <td>{{ task.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>
-                                <span class="status-{{ task.status.replace(' ', '-') }}" id="status-{{ task.id }}">
-                                    {{ task.status.title() }}
-                                </span>
-                            </td>
-                            <td class="action-buttons">
-                                {% if task.status == 'completed' and task.result_json %}
-                                <a href="/result/{{ task.id }}?username={{ username }}" class="view-button">View Report</a>
-                                <button class="delete-button" onclick="showDeleteModal({{ task.id }}, 'completed')">Delete</button>
-                                {% elif task.status == 'failed' %}
-                                <button class="delete-failed-button" onclick="showDeleteModal({{ task.id }}, 'failed')">Delete</button>
-                                {% else %}
-                                <span style="color: #666; font-size: 0.85rem;">No actions available</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="no-tasks">
-                    <h3>No analysis tasks yet</h3>
-                    <p>Create your first resume analysis task to get started!</p>
-                    <a href="/upload?username={{ username }}" class="new-task-button" style="display: inline-block; margin-top: 1rem;">Create New Submission</a>
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" data-tab="table-view">Table View</button>
+                <button class="tab" data-tab="cards-view">Card View</button>
+            </div>
+            
+            <!-- Table View Tab -->
+            <div class="tab-content active" id="table-view">
+                <div class="tasks-table">
+                    <div id="tasksContainer">
+                        {% if tasks %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Task ID</th>
+                                    <th>Candidate</th>
+                                    <th>Score</th>
+                                    <th>Resume File</th>
+                                    <th>Job Title</th>
+                                    <th>Job Description</th>
+                                    <th>Submitted At</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksTableBody">
+                                {% for task in tasks %}
+                                <tr id="task-{{ task.id }}" data-task-id="{{ task.id }}">
+                                    <td>#{{ task.id }}</td>
+                                    <td>{{ task.candidate }}</td>
+                                    <td>{{ task.score }}</td>
+                                    <td>{{ task.resume_filename }}</td>
+                                    <td>{{ task.job_title }}</td>
+                                    <td>
+                                        {# 安全处理job_description，避免NoneType错误 #}
+                                        {% if task.job_description %}
+                                            {{ task.job_description[:50] }}{% if task.job_description|length > 50 %}...{% endif %}
+                                        {% else %}
+                                            No description
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ task.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <span class="status-{{ task.status.replace(' ', '-') }}" id="status-{{ task.id }}">
+                                            {{ task.status.title() }}
+                                        </span>
+                                    </td>
+                                    
+                                    <td class="action-buttons">
+                                        {% if task.status == 'completed' and task.result_json %}
+                                        <a href="/result/{{ task.id }}?username={{ username }}" class="view-button">View Report</a>
+                                        <button class="delete-button" onclick="showDeleteModal({{ task.id }}, 'completed')">Delete</button>
+                                        {% elif task.status == 'failed' %}
+                                        <button class="delete-failed-button" onclick="showDeleteModal({{ task.id }}, 'failed')">Delete</button>
+                                        {% else %}
+                                        <span style="color: #666; font-size: 0.85rem;">No actions available</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="no-tasks">
+                            <h3>No analysis tasks yet</h3>
+                            <p>Create your first resume analysis task to get started!</p>
+                            <a href="/upload?username={{ username }}" class="new-task-button" style="display: inline-block; margin-top: 1rem;">Create New Submission</a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
+            </div>
+            
+            <!-- Cards View Tab -->
+            <div class="tab-content" id="cards-view">
+                <div class="cards-container" id="cardsContainer">
+                    {% if tasks %}
+                        {% set job_groups = {} %}
+                        {% for task in tasks %}
+                            {% if task.job_title %}
+                                {% if task.job_title not in job_groups %}
+                                    {% set _ = job_groups.update({task.job_title: []}) %}
+                                {% endif %}
+                                {% set _ = job_groups[task.job_title].append(task) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% for job_title, job_tasks in job_groups.items() %}
+                            <div class="job-card" data-job-title="{{ job_title }}">
+                                <div class="job-card-header">
+                                    <h3 class="job-title">{{ job_title }}</h3>
+                                    <p class="job-description">
+                                        {% if job_tasks[0].job_description %}
+                                            {{ job_tasks[0].job_description }}
+                                        {% else %}
+                                            No description available
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <!-- Key Statistics -->
+                                <!-- <div class="job-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="total-{{ job_title|replace(' ', '-') }}">{{ job_tasks|length }}</div>
+                                        <div class="stat-label">Total Candidates</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="completed-{{ job_title|replace(' ', '-') }}">
+                                            {{ job_tasks|selectattr("status", "equalto", "completed")|list|length }}
+                                        </div>
+                                        <div class="stat-label">Completed</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="avg-score-{{ job_title|replace(' ', '-') }}">
+                                            {% set scores = [] %}
+                                            {% for task in job_tasks %}
+                                                {% if task.score and task.score != 'N/A' %}
+                                                    {% set _ = scores.append(task.score|float) %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if scores %}
+                                                {{ "%.1f"|format(scores|sum / scores|length) }}
+                                            {% else %}
+                                                0.0
+                                            {% endif %}
+                                        </div>
+                                        <div class="stat-label">Avg Score</div>
+                                    </div>
+                                </div> -->
+                                
+                                <!-- Visualization -->
+                                <div class="visualization-container">
+                                    <div class="chart-container">
+                                        <div class="pie-chart" id="pie-chart-{{ job_title|replace(' ', '-') }}">
+                                            <div class="chart-center">
+                                                <div class="chart-total">{{ job_tasks|length }}</div>
+                                                <div class="chart-label">Candidates</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="chart-details">
+                                        {% set status_counts = {
+                                            'completed': job_tasks|selectattr("status", "equalto", "completed")|list|length,
+                                            'in-process': job_tasks|selectattr("status", "equalto", "in process")|list|length,
+                                            'failed': job_tasks|selectattr("status", "equalto", "failed")|list|length
+                                        } %}
+                                        
+                                        {% for status, count in status_counts.items() %}
+                                            {% set percent = (count / job_tasks|length * 100) if job_tasks|length > 0 else 0 %}
+                                            <div class="detail-item {{ status }}">
+                                                <div class="detail-info">
+                                                    <div class="detail-color" style="background-color: 
+                                                        {% if status == 'completed' %}#40e0d0
+                                                        {% elif status == 'in-process' %}#1e90ff
+                                                        {% else %}#ff6b6b{% endif %}">
+                                                    </div>
+                                                    <span class="detail-text">{{ status|replace('-', ' ')|title }}</span>
+                                                </div>
+                                                <div class="detail-count">{{ count }}</div>
+                                                <div class="detail-percent">{{ "%.1f"|format(percent) }}%</div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Score Distribution -->
+                                <div class="score-distribution">
+                                    <h4 class="score-title">Score Distribution</h4>
+                                    <div class="score-bars">
+                                        {% set score_ranges = {
+                                            'Excellent (90-100)': 0,
+                                            'Good (75-89)': 0,
+                                            'Average (60-74)': 0,
+                                            'Needs Improvement (<60)': 0
+                                        } %}
+                                        
+                                        {% for task in job_tasks %}
+                                            {% if task.score and task.score != 'N/A' %}
+                                                {% set score_num = task.score|float %}
+                                                {% if score_num >= 90 %}
+                                                    {% set _ = score_ranges.update({'Excellent (90-100)': score_ranges['Excellent (90-100)'] + 1}) %}
+                                                {% elif score_num >= 75 %}
+                                                    {% set _ = score_ranges.update({'Good (75-89)': score_ranges['Good (75-89)'] + 1}) %}
+                                                {% elif score_num >= 60 %}
+                                                    {% set _ = score_ranges.update({'Average (60-74)': score_ranges['Average (60-74)'] + 1}) %}
+                                                {% else %}
+                                                    {% set _ = score_ranges.update({'Needs Improvement (<60)': score_ranges['Needs Improvement (<60)'] + 1}) %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% for range_name, count in score_ranges.items() %}
+                                            {% set percent = (count / job_tasks|length * 100) if job_tasks|length > 0 else 0 %}
+                                            <div class="score-bar">
+                                                <span class="score-label">{{ range_name }}</span>
+                                                <div class="score-bar-container">
+                                                    <div class="score-bar-fill" style="width: {{ percent }}%"></div>
+                                                </div>
+                                                <span class="score-value">{{ count }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Individual Scores -->
+                                <div class="individual-scores">
+                                    <h4 class="scores-title">Individual Scores</h4>
+                                    <div class="scores-list">
+                                        {% for task in job_tasks %}
+                                            {% if task.score and task.score != 'N/A' and task.candidate %}
+                                                {% if task.status == 'completed' and task.result_json %}
+                                                    <a href="/result/{{ task.id }}?username={{ username }}" class="score-tag" data-task-id="{{ task.id }}">
+                                                        {{ task.candidate }}: {{ task.score }}
+                                                    </a>
+                                                {% else %}
+                                                    <div class="score-tag disabled" data-task-id="{{ task.id }}" title="Report not available for {{ task.status }} tasks">
+                                                        {{ task.candidate }}: {{ task.score }}
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if not job_tasks|selectattr("score")|selectattr("score", "ne", "N/A")|list %}
+                                            <div class="no-data">No scores available</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-tasks">
+                            <h3>No analysis tasks yet</h3>
+                            <p>Create your first resume analysis task to see analytics!</p>
+                            <a href="/upload?username={{ username }}" class="new-task-button" style="display: inline-block; margin-top: 1rem;">Create New Submission</a>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </main>
@@ -466,9 +1102,11 @@
         // 全局变量
         const username = "{{ username }}";
         let currentTasks = [];
+        let currentJobGroups = {}; // 保存当前卡片数据状态
         let updateInterval;
         let taskToDelete = null;
         let taskStatusToDelete = null;
+        let isCardsViewActive = false; // 跟踪当前激活的标签页
 
         // 安全地解析JSON数据
         try {
@@ -478,7 +1116,57 @@
             console.error('Error parsing tasks JSON:', error);
             currentTasks = [];
         }
-        
+
+        // 比较两个任务数组是否相同
+        function areTasksEqual(tasks1, tasks2) {
+            if (tasks1.length !== tasks2.length) return false;
+            
+            for (let i = 0; i < tasks1.length; i++) {
+                const task1 = tasks1[i];
+                const task2 = tasks2[i];
+                
+                if (task1.id !== task2.id ||
+                    task1.status !== task2.status ||
+                    task1.score !== task2.score ||
+                    task1.candidate !== task2.candidate) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // 比较两个任务分组是否相同
+        function areJobGroupsEqual(groups1, groups2) {
+            const keys1 = Object.keys(groups1);
+            const keys2 = Object.keys(groups2);
+            
+            if (keys1.length !== keys2.length) return false;
+            
+            for (const key of keys1) {
+                if (!groups2[key] || !areTasksEqual(groups1[key], groups2[key])) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // 按职位分组任务
+        function groupTasksByJob(tasks) {
+            const jobGroups = {};
+            tasks.forEach(task => {
+                if (task && task.job_title) {
+                    const jobTitle = task.job_title;
+                    if (!jobGroups[jobTitle]) {
+                        jobGroups[jobTitle] = [];
+                    }
+                    jobGroups[jobTitle].push(task);
+                }
+            });
+            return jobGroups;
+        }
+
         // 更新任务表格的函数
         function updateTasksTable(tasks) {
             const tableBody = document.getElementById('tasksTableBody');
@@ -503,7 +1191,10 @@
                         <thead>
                             <tr>
                                 <th>Task ID</th>
+                                <th>Candidate</th>
+                                <th> Score</th>
                                 <th>Resume File</th>
+                                <th>Job Title</th>
                                 <th>Job Description</th>
                                 <th>Submitted At</th>
                                 <th>Status</th>
@@ -562,10 +1253,16 @@
                 const submittedAt = task.submitted_at || 'Unknown';
                 const resumeFilename = task.resume_filename || 'Unknown file';
                 const taskId = task.id || 'Unknown';
-                
+                const score = task.score || '';
+                const candidate = task.candidate || '';
+                const job_title = task.job_title || '';
+
                 row.innerHTML = `
                     <td>#${taskId}</td>
+                    <td>${candidate}</td>
+                    <td>${score}</td>
                     <td>${resumeFilename}</td>
+                    <td>${job_title}</td>
                     <td>${jobDescription}</td>
                     <td>${submittedAt}</td>
                     <td>
@@ -582,7 +1279,243 @@
             // 更新当前任务状态
             currentTasks = tasks;
         }
-        
+
+        // 智能更新卡片视图 - 只在数据变化时更新
+        function updateCardsView(tasks) {
+            // 如果卡片视图不是当前激活的标签页，不更新
+            if (!isCardsViewActive) return;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const newJobGroups = groupTasksByJob(tasks);
+            
+            // 检查数据是否真的发生了变化
+            if (areJobGroupsEqual(currentJobGroups, newJobGroups)) {
+                console.log('Cards data unchanged, skipping update');
+                return;
+            }
+            
+            console.log('Cards data changed, updating view');
+            
+            // 安全检查
+            if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+                cardsContainer.innerHTML = `
+                    <div class="no-tasks">
+                        <h3>No analysis tasks yet</h3>
+                        <p>Create your first resume analysis task to see analytics!</p>
+                        <a href="/upload?username=${username}" class="new-task-button" style="display: inline-block; margin-top: 1rem;">Create New Submission</a>
+                    </div>
+                `;
+                currentJobGroups = {};
+                return;
+            }
+            
+            // 如果没有有效的任务分组
+            if (Object.keys(newJobGroups).length === 0) {
+                cardsContainer.innerHTML = `
+                    <div class="no-tasks">
+                        <h3>No valid job data available</h3>
+                        <p>Create tasks with job titles to see statistics.</p>
+                    </div>
+                `;
+                currentJobGroups = {};
+                return;
+            }
+            
+            // 添加更新动画
+            cardsContainer.classList.add('card-updating');
+            
+            // 生成卡片HTML
+            let cardsHtml = '';
+            
+            Object.entries(newJobGroups).forEach(([jobTitle, jobTasks]) => {
+                // 计算统计数据
+                const totalCandidates = jobTasks.length;
+                const completedCount = jobTasks.filter(task => task.status === 'completed').length;
+                const inProgressCount = jobTasks.filter(task => task.status === 'in process').length;
+                const failedCount = jobTasks.filter(task => task.status === 'failed').length;
+                
+                // 修复平均分计算 - 安全处理字符串分数
+                const scores = [];
+                jobTasks.forEach(task => {
+                    if (task.score && task.score !== 'N/A') {
+                        const scoreNum = parseFloat(task.score);
+                        if (!isNaN(scoreNum)) {
+                            scores.push(scoreNum);
+                        }
+                    }
+                });
+                const avgScore = scores.length > 0 ? 
+                    (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1) : 
+                    '0.0';
+                
+                // 获取职位描述
+                const jobDescription = jobTasks[0].job_description ? 
+                    (jobTasks[0].job_description.length > 100 ? 
+                     jobTasks[0].job_description.substring(0, 100) + '...' : 
+                     jobTasks[0].job_description) : 
+                    'No description available';
+                
+                // 计算饼图的角度
+                const completedPercent = (completedCount / totalCandidates) * 100;
+                const inProgressPercent = (inProgressCount / totalCandidates) * 100;
+                const failedPercent = (failedCount / totalCandidates) * 100;
+
+                // 计算分数分布
+                const scoreRanges = {
+                    'Excellent (90-100)': 0,
+                    'Good (75-89)': 0,
+                    'Average (60-74)': 0,
+                    'Needs Improvement (<60)': 0
+                };
+                
+                jobTasks.forEach(task => {
+                    if (task.score && task.score !== 'N/A') {
+                        const scoreNum = parseFloat(task.score);
+                        if (scoreNum >= 90) {
+                            scoreRanges['Excellent (90-100)']++;
+                        } else if (scoreNum >= 75) {
+                            scoreRanges['Good (75-89)']++;
+                        } else if (scoreNum >= 60) {
+                            scoreRanges['Average (60-74)']++;
+                        } else {
+                            scoreRanges['Needs Improvement (<60)']++;
+                        }
+                    }
+                });
+
+                // 获取有分数的候选人
+                const candidatesWithScores = jobTasks
+                    .filter(task => task.score && task.score !== 'N/A' && task.candidate)
+                    .map(task => ({ 
+                        candidate: task.candidate, 
+                        score: task.score,
+                        taskId: task.id,
+                        status: task.status,
+                        result_json: task.result_json
+                    }));
+
+                cardsHtml += `
+                    <div class="job-card" data-job-title="${jobTitle}">
+                        <div class="job-card-header">
+                            <h3 class="job-title">${jobTitle}</h3>
+                            <p class="job-description">${jobDescription}</p>
+                        </div>
+                        
+                        <div class="job-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${totalCandidates}</div>
+                                <div class="stat-label">Total Candidates</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${completedCount}</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${avgScore}</div>
+                                <div class="stat-label">Avg Score</div>
+                            </div>
+                        </div>
+                        
+                        <div class="visualization-container">
+                            <div class="chart-container">
+                                <div class="pie-chart" style="background: conic-gradient(
+                                    #40e0d0 0% ${completedPercent}%,
+                                    #1e90ff ${completedPercent}% ${completedPercent + inProgressPercent}%,
+                                    #ff6b6b ${completedPercent + inProgressPercent}% 100%
+                                )">
+                                    <div class="chart-center">
+                                        <div class="chart-total">${totalCandidates}</div>
+                                        <div class="chart-label">Candidates</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-details">
+                                <div class="detail-item completed">
+                                    <div class="detail-info">
+                                        <div class="detail-color" style="background-color: #40e0d0"></div>
+                                        <span class="detail-text">Completed</span>
+                                    </div>
+                                    <div class="detail-count">${completedCount}</div>
+                                    <div class="detail-percent">${completedPercent.toFixed(1)}%</div>
+                                </div>
+                                <div class="detail-item in-process">
+                                    <div class="detail-info">
+                                        <div class="detail-color" style="background-color: #1e90ff"></div>
+                                        <span class="detail-text">In Process</span>
+                                    </div>
+                                    <div class="detail-count">${inProgressCount}</div>
+                                    <div class="detail-percent">${inProgressPercent.toFixed(1)}%</div>
+                                </div>
+                                <div class="detail-item failed">
+                                    <div class="detail-info">
+                                        <div class="detail-color" style="background-color: #ff6b6b"></div>
+                                        <span class="detail-text">Failed</span>
+                                    </div>
+                                    <div class="detail-count">${failedCount}</div>
+                                    <div class="detail-percent">${failedPercent.toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Score Distribution -->
+                        <div class="score-distribution">
+                            <h4 class="score-title">Score Distribution</h4>
+                            <div class="score-bars">
+                                ${Object.entries(scoreRanges).map(([rangeName, count]) => {
+                                    const percent = (count / totalCandidates * 100) || 0;
+                                    return `
+                                        <div class="score-bar">
+                                            <span class="score-label">${rangeName}</span>
+                                            <div class="score-bar-container">
+                                                <div class="score-bar-fill" style="width: ${percent}%"></div>
+                                            </div>
+                                            <span class="score-value">${count}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Individual Scores -->
+                        <div class="individual-scores">
+                            <h4 class="scores-title">Individual Scores</h4>
+                            <div class="scores-list">
+                                ${candidatesWithScores.length > 0 ? 
+                                    candidatesWithScores.map(candidate => {
+                                        // 只有完成状态且有结果的任务才能查看报告
+                                        if (candidate.status === 'completed' && candidate.result_json) {
+                                            return `
+                                                <a href="/result/${candidate.taskId}?username=${username}" class="score-tag" data-task-id="${candidate.taskId}">
+                                                    ${candidate.candidate}: ${candidate.score}
+                                                </a>
+                                            `;
+                                        } else {
+                                            return `
+                                                <div class="score-tag disabled" data-task-id="${candidate.taskId}" title="Report not available for ${candidate.status} tasks">
+                                                    ${candidate.candidate}: ${candidate.score}
+                                                </div>
+                                            `;
+                                        }
+                                    }).join('') : 
+                                    '<div class="no-data">No scores available</div>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cardsContainer.innerHTML = cardsHtml;
+            currentJobGroups = newJobGroups;
+            
+            // 移除更新动画
+            setTimeout(() => {
+                cardsContainer.classList.remove('card-updating');
+                animateScoreBars();
+            }, 300);
+        }
+
         // 从服务器获取任务状态的函数
         async function fetchTasks() {
             try {
@@ -596,15 +1529,23 @@
                 
                 // 安全检查返回的数据
                 if (data && Array.isArray(data.tasks)) {
-                    updateTasksTable(data.tasks);
+                    // 只在数据实际变化时更新
+                    if (!areTasksEqual(currentTasks, data.tasks)) {
+                        console.log('Tasks data changed, updating views');
+                        updateTasksTable(data.tasks);
+                        updateCardsView(data.tasks);
+                        currentTasks = data.tasks;
+                    } else {
+                        console.log('Tasks data unchanged');
+                        // 只更新状态文本，不重新渲染
+                        const statusText = document.getElementById('statusText');
+                        statusText.textContent = `Last updated: ${new Date().toLocaleTimeString()} (no changes)`;
+                        statusText.style.color = '#a0a0a0';
+                    }
                 } else {
                     updateTasksTable([]);
+                    updateCardsView([]);
                 }
-                
-                // 更新状态指示器
-                const statusText = document.getElementById('statusText');
-                statusText.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-                statusText.style.color = '#a0a0a0';
                 
             } catch (error) {
                 console.error('Error fetching tasks:', error);
@@ -613,7 +1554,7 @@
                 statusText.style.color = '#ff6b6b';
             }
         }
-        
+
         // 启动实时更新
         function startRealTimeUpdates() {
             // 立即获取一次数据
@@ -695,6 +1636,9 @@
                     // 从当前任务列表中移除
                     currentTasks = currentTasks.filter(task => task.id !== taskId);
                     
+                    // 更新卡片视图
+                    updateCardsView(currentTasks);
+                    
                     hideDeleteModal();
                     
                     // 显示成功消息
@@ -742,8 +1686,58 @@
             }, 3000);
         }
         
+        // 切换标签页
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 更新标签按钮状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            
+            // 更新当前激活的标签页状态
+            isCardsViewActive = (tabId === 'cards-view');
+            
+            // 如果是卡片视图，初始化图表
+            if (tabId === 'cards-view') {
+                setTimeout(() => {
+                    animateScoreBars();
+                }, 100);
+            }
+        }
+
+        // 动画效果
+        function animateScoreBars() {
+            document.querySelectorAll('.score-bar-fill').forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }
+
         // 事件监听器
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化当前任务分组
+            currentJobGroups = groupTasksByJob(currentTasks);
+            
+            // 标签页切换事件
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
             // 删除确认按钮事件
             document.getElementById('confirmDelete').addEventListener('click', function() {
                 if (taskToDelete) {
@@ -763,6 +1757,7 @@
             
             // 初始渲染
             updateTasksTable(currentTasks);
+            updateCardsView(currentTasks);
             startRealTimeUpdates();
             
             // 当页面不可见时暂停更新，可见时恢复更新

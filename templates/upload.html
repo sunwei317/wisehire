@@ -141,6 +141,22 @@
             flex-direction: column;
             gap: 0.5rem;
         }
+
+        .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group-inline {
+    flex: 1;
+}
+
+.form-group-inline textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+}
         
         label {
             color: #40e0d0;
@@ -299,6 +315,23 @@
             background: rgba(64, 224, 208, 0.1);
         }
         
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group-inline {
+    flex: 1;
+}
+
+.form-group-inline textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+}
+
         .form-footer {
             display: flex;
             justify-content: space-between;
@@ -424,7 +457,19 @@
             </div>
             
             <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
-                                <div class="form-group">
+
+                <div class="form-row">
+    <div class="form-group-inline">
+        <label for="jobTitle">Job Title</label>
+        <textarea id="jobTitle" name="job_title" placeholder="Paste the job title here..." required></textarea>
+    </div>
+    <div class="form-group-inline">
+        <label for="jobCompany">Company</label>
+        <textarea id="jobCompany" name="job_company" placeholder="Paste the company here..." required></textarea>
+    </div>
+</div>
+
+                    <div class="form-group">
                     <label for="jobDescription">Job Description</label>
                     <textarea id="jobDescription" name="job_description" placeholder="Paste the job description here..." required></textarea>
                 </div>
@@ -621,6 +666,18 @@ uploadForm.addEventListener('submit', async (e) => {
         showNotification('Please select at least one resume file.', 'error');
         return;
     }
+
+
+    const jobTitle = document.getElementById('jobTitle').value.trim();
+    if (!jobTitle) {
+        showNotification('Please enter a job title.', 'error');
+        return;
+    }
+    const jobCompany = document.getElementById('jobCompany').value.trim();
+    if (!jobCompany) {
+        showNotification('Please enter a company.', 'error');
+        return;
+    }
     
     const jobDescription = document.getElementById('jobDescription').value.trim();
     if (!jobDescription) {
@@ -637,6 +694,8 @@ uploadForm.addEventListener('submit', async (e) => {
     try {
         // Create FormData
         const formData = new FormData();
+        formData.append('job_title', jobTitle);
+        formData.append('job_company', jobCompany);
         formData.append('job_description', jobDescription);
         formData.append('username', '{{ username }}');
         
