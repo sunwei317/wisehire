@@ -465,23 +465,15 @@ def match_score_from_deepseek(
     # except Exception as e:
     #     return {"error": str(e)}
 
-def match_score_only_deepseek(
-    resume_text: str, job_description: str
-) -> Dict[str, Any]:
+def match_score_only_deepseek(resume_text: str, job_description: str) -> Dict[str, Any]:
     
     # Create the prompt for the analysis
     prompt = f"""
-    You are an expert HR analyst. Given a candidate's resume, and a job description,
+    You are an expert HR analyst. Given a candidate's resume {resume_text}, and a job description {job_description},
     根据不同领域的job description, 对候选人的不同方面的要求也是不一样的。仔细分析提供的job description, 对于不同的方面给出不同的权重来计算匹配成绩。
-    provide a matching score, the score is between 0 and 100, where 0 means no match at all and 100 means perfect match.
-    
-
-    RESUME:
-    {resume_text}
-
-    JOB DESCRIPTION:
-    {job_description}
-
+    You must provide a matching score between 0 and 100, where 0 means no match at all and 100 means perfect match. If you don't know, the score is 0.
+    Also extract the candidate's full name.
+    The output is valid JSON format as {{"match_score":"int","full_name":""string}}. 
     """
 
     response = deepseek_client.chat.completions.create(
@@ -495,15 +487,20 @@ def match_score_only_deepseek(
                 
             ],
             temperature=0.1,  # Lower temperature for more deterministic output
-            max_tokens=10,
+            max_tokens=100,
+            response_format={"type": "json_object"},
     )
 
     # Extract the response content
     match_score = response.choices[0].message.content.strip()
-
-    # Try to parse the JSON response
     
-    return match_score
+        # Try to parse the JSON response
+    try:
+        match_score = json.loads(match_score)
+        return match_score
+    except json.JSONDecodeError:
+        # If JSON parsing fails, return the raw text
+        return {"raw_analysis": match_score}
 
 
 def analyze_working_history(work_history) -> dict:
@@ -566,13 +563,14 @@ def submit_pipeline(task_ids,user_id,resume_texts,job_description,score_threshol
     for (task_id,resume_text) in zip(task_ids,resume_texts):
 
         match_score=match_score_only_deepseek(resume_texts,job_description)
-        if float(match_score)<score_threshold:
-                            # 更新任务状态
+        
+        if float(match_score.get("match_score","0"))<score_threshold:
+                 # 更新任务状态
                 update_data = {
                     "task_id": task_id,
                     "status": "completed",
-                    "score": match_score,
-                    "candidate": analysis_result["full_name"],
+                    "score": match_score.get("match_score","0"),
+                    "candidate": match_score.get("full_name","unkown"),
                     "result_json": "",
                     "updated_at": datetime.now()
                 }

@@ -185,7 +185,7 @@ def update_task(task):
 
 def delete_task_from_db(task_id, user_id):
     
-        to_be_deleted_report=os.path.join("analysis_ranalysis_taskseports",f"task_id_{task_id}_user_{user_id}.json")
+        to_be_deleted_report=os.path.join("analysis_reports",f"task_id_{task_id}_user_{user_id}.json")
         if os.path.exists(to_be_deleted_report):
             os.remove(to_be_deleted_report)
 
