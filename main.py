@@ -8,13 +8,11 @@ from datetime import datetime
 import os
 import json
 from pathlib import Path
-import uuid
-import mistune
+
 import json
-import requests
 from typing import List
-# Your previous functions here...
-from worker import (
+
+from utils import (
     extract_text_from_pdf,
     extract_text_from_docx,
     extract_text_from_doc,
@@ -180,6 +178,7 @@ async def result_page(request: Request, task_id: int, username: str, db: Session
         temp_his.append(json.loads(result_data["detailed_work_histories"][idx]))
 
     result_data["detailed_work_histories"]=temp_his
+
     
     from markupsafe import Markup
     formatted_json = json.dumps(result_data, indent=2, ensure_ascii=False)
